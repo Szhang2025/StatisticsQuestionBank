@@ -2,62 +2,79 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Statistics Quiz Bank</title>
 <style>
-:root{--bg:#f6f7fb;--card:#fff;--tx:#1d2433;--mu:#667085;--ac:#2c5fd8;--ok:#1a8f4d;--bad:#c93c3c;--bd:#dde1ea}
-@media(prefers-color-scheme:dark){:root{--bg:#12151c;--card:#1b2030;--tx:#e8ebf3;--mu:#98a2b8;--ac:#6f95ff;--ok:#43c47a;--bad:#ff6b6b;--bd:#2c3347}}
-*{box-sizing:border-box}body{margin:0;font:16px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
-#app{max-width:860px;margin:0 auto;padding:20px}
+:root{--bg:#f3f4fb;--card:#fff;--tx:#1e2235;--mu:#667085;--ac:#4f46e5;--ac2:#06b6d4;--ok:#16a34a;--bad:#dc2626;--bd:#dfe3f0;--l:46%;--sh:0 2px 10px rgba(60,60,140,.08)}
+@media(prefers-color-scheme:dark){:root{--bg:#10131d;--card:#1a1f31;--tx:#e8ebf6;--mu:#9aa5bf;--ac:#8b93ff;--ac2:#22d3ee;--ok:#4ade80;--bad:#ff7b7b;--bd:#2b3350;--l:64%;--sh:0 2px 12px rgba(0,0,0,.35)}}
+*{box-sizing:border-box}body{margin:0;font:16px/1.5 system-ui,sans-serif;color:var(--tx);background:var(--bg) radial-gradient(900px 300px at 85% -60px,rgba(124,58,237,.14),transparent),radial-gradient(700px 280px at 0 -40px,rgba(6,182,212,.14),transparent) no-repeat}
+#app{max-width:880px;margin:0 auto;padding:20px}
 h1{font-size:1.5rem;margin:.2em 0}.mu{color:var(--mu)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin:10px 0}
-button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:9px 16px;background:var(--ac);color:#fff}
-button.topic{background:var(--card);color:var(--tx);border:1px solid var(--bd);text-align:left;margin:0}
-button.topic:hover{border-color:var(--ac)}button.link{background:none;color:var(--ac);padding:0}
-button.sm{padding:4px 10px;font-size:.85rem}
-input[type=text],input[type=password]{width:100%;font:inherit;padding:9px;margin:4px 0 12px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx)}
-.opt{display:block;padding:10px 12px;margin:6px 0;border:1px solid var(--bd);border-radius:8px;cursor:pointer}
-.opt.ok{border-color:var(--ok);background:rgba(26,143,77,.15)}.opt.bad{border-color:var(--bad);background:rgba(201,60,60,.15)}
-.q{font-size:1.05rem;font-weight:600}.bar{display:flex;justify-content:space-between;color:var(--mu)}
+.hero{background:linear-gradient(135deg,#4f46e5,#7c3aed 55%,#06b6d4);color:#fff;border-radius:16px;padding:22px 24px;margin-bottom:16px;box-shadow:var(--sh)}
+.hero h1{font-size:1.8rem;margin:0 0 4px}.hero p{margin:0;opacity:.92}
+.hero.sm{padding:14px 20px}.hero.sm h1{font-size:1.3rem;margin:0}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px;margin:12px 0;box-shadow:var(--sh)}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:9px 18px;color:#fff;background:linear-gradient(135deg,var(--ac),#7c3aed);box-shadow:0 2px 6px rgba(79,70,229,.3);transition:transform .08s,filter .15s}
+button:hover{filter:brightness(1.08)}button:active{transform:translateY(1px)}button:disabled{opacity:.55;cursor:default}
+button.topic{--c:hsl(var(--h,230) 68% var(--l));background:color-mix(in srgb,var(--c) 9%,var(--card));color:var(--tx);border:1px solid var(--bd);border-left:7px solid var(--c);text-align:left;margin:0;padding:14px 14px;font-weight:600;box-shadow:var(--sh)}
+button.topic:hover{border-color:var(--c);background:color-mix(in srgb,var(--c) 18%,var(--card));transform:translateY(-2px)}
+button.link{background:none;box-shadow:none;color:var(--ac);padding:0;text-decoration:underline}
+button.sm{padding:4px 12px;font-size:.85rem}
+input[type=text],input[type=password]{width:100%;font:inherit;padding:10px;margin:4px 0 12px;border:2px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx)}
+input[type=text]:focus,input[type=password]:focus{outline:0;border-color:var(--ac)}
+.opt{display:block;padding:11px 14px;margin:8px 0;border:2px solid var(--bd);border-radius:10px;cursor:pointer;transition:background .12s,border-color .12s}
+.opt:hover{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 8%,var(--card))}
+.opt:has(input:checked){border-color:var(--ac);background:color-mix(in srgb,var(--ac) 14%,var(--card))}
+.opt b{color:var(--ac)}
+.opt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 18%,var(--card))}.opt.bad{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 16%,var(--card))}
+.q{font-size:1.08rem;font-weight:600}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
+.bar span:first-child{color:var(--ac)}.bar span:last-child{background:color-mix(in srgb,var(--ac) 14%,var(--card));color:var(--ac);padding:2px 12px;border-radius:99px}
+.prog{height:8px;background:var(--bd);border-radius:99px;margin:8px 0;overflow:hidden}.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:99px;transition:width .3s}
 table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}
-.b{height:14px;background:var(--ac);border-radius:4px;display:inline-block;vertical-align:middle}.b.c{background:var(--ok)}
-.err{color:var(--bad)}.wrap{overflow-x:auto}
+th{background:color-mix(in srgb,var(--ac) 12%,var(--card));color:var(--ac)}
+.b{height:14px;background:linear-gradient(90deg,var(--ac),var(--ac2));border-radius:4px;display:inline-block;vertical-align:middle}.b.c{background:linear-gradient(90deg,var(--ok),#a3e635)}
+.err{color:var(--bad)}.okc{color:var(--ok);font-weight:600}.wrap{overflow-x:auto}
 </style></head><body><div id="app"></div>
 <script>
 /* Paste your deployed Apps Script Web App URL here (see Code.gs). */
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwT23TWc7m_g_e1GIl66fYOJ9OXcjvlz6xO8VYbjrRayfFKbV_SY6mQf4pYrcDd7nWTrg/exec';
-const LET='ABCD',f=(x,d=2)=>(+x).toFixed(d);
+const HUE=[220,255,165,190,335,20,45,280,100,350,130,175,300],LET='ABCD',f=(x,d=2)=>(+x).toFixed(d);
 const TOPICS=[{id:'z1p',name:'One-sample z test for a proportion'},{id:'z1ci',name:'One-sample z confidence interval for a proportion'},{id:'t1s',name:'One-sample t test'},{id:'t1ci',name:'One-sample t confidence interval'},{id:'t2s',name:'Two-sample t test (Welch)'},{id:'t2ci',name:'Two-sample t confidence interval (Welch)'},{id:'gof',name:'Chi-square test for goodness of fit'},{id:'ind',name:'Chi-square test for independence'},{id:'hom',name:'Chi-square test for homogeneity'},{id:'anova',name:'One-way ANOVA with Tukey follow-up'},{id:'slr',name:'Simple linear regression'},{id:'mlr',name:'Multiple linear regression'},{id:'cc',name:'Control charts (x̄, R, p)'}];
 /* ---------- app ---------- */
 const $=s=>document.querySelector(s),app=$('#app'),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let ST={},IP='';
 async function api(o){if(!SCRIPT_URL)return{ok:false,error:'SCRIPT_URL is not set.'};const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(o)});return r.json()}
-const msg=(t,e)=>{const m=$('#msg');m.textContent=t;m.className=e?'err':'mu'};
-function home(){ST={};app.innerHTML=`<h1>Statistics Quiz Bank</h1><p class="mu">Pick a topic — 20 questions each.${SCRIPT_URL?'':' <b class="err">SCRIPT_URL is empty: set it to your Apps Script web app URL.</b>'}</p><div class="grid">${TOPICS.map((t,i)=>`<button class="topic" data-i="${i}">${esc(t.name)}</button>`).join('')}</div><p><button class="link" id="ins">Instructor view</button></p>`;
+const msg=(t,e)=>{const m=$('#msg');m.textContent=t;m.className=e==2?'okc':e?'err':'mu'};
+function home(){ST={};app.innerHTML=`<div class="hero"><h1>Statistics Quiz Bank</h1><p>Pick a topic — 20 questions each.</p></div>${SCRIPT_URL?'':'<p class="err"><b>SCRIPT_URL is empty: set it to your Apps Script web app URL.</b></p>'}<div class="grid">${TOPICS.map((t,i)=>`<button class="topic" style="--h:${HUE[i]}" data-i="${i}">${esc(t.name)}</button>`).join('')}</div><p><button class="link" id="ins">Instructor view</button></p>`;
 app.querySelectorAll('.topic').forEach(b=>b.onclick=()=>login(+b.dataset.i));$('#ins').onclick=instrLogin}
-function login(i){const t=TOPICS[i];app.innerHTML=`<h1>${esc(t.name)}</h1><div class="card"><label>Your unique username</label><input type="text" id="u" autocomplete="off"><label>Quiz password</label><input type="password" id="p"><p id="msg" class="mu"></p><button id="go">Start quiz</button> <button class="link" id="bk">Back</button></div>`;
+function login(i){const t=TOPICS[i];app.innerHTML=`<div class="hero sm"><h1>${esc(t.name)}</h1></div><div class="card"><label>Your unique username</label><input type="text" id="u" autocomplete="off"><label>Quiz password</label><input type="password" id="p"><p id="msg" class="mu"></p><button id="go">Start quiz</button> <button class="link" id="bk">Back</button></div>`;
 $('#bk').onclick=home;$('#go').onclick=async()=>{const u=$('#u').value.trim(),p=$('#p').value;if(!u||!p)return msg('Enter both username and password.',1);msg('Checking…');
-let r;try{r=await api({action:'check',password:p});if(!r.ok)return msg(r.error||'Incorrect password.',1);msg('Loading questions…');r=await api({action:'questions',password:p,topic:t.id});if(!r.ok)return msg(r.error||'Could not load questions.',1)}catch(e){return msg('Could not reach the server.',1)}
+let r;try{r=await api({action:'check',password:p});if(!r.ok)return msg(r.error||'Incorrect password.',1);msg('Loading questions…');r=await api({action:'questions',password:p,topic:t.id,user:u});if(!r.ok)return msg(r.error||'Could not load questions.',1)}catch(e){return msg('Could not reach the server.',1)}
 ST={t,u,p,qs:r.qs,i:0,score:0};ask()}}
 function ask(){const s=ST;if(s.i>=20)return done();const q=s.qs[s.i];
-app.innerHTML=`<div class="bar"><span>${esc(s.t.name)} · ${esc(s.u)}</span><span>${s.i+1}/20</span></div><div class="card"><p class="q">${esc(q.q)}</p>${q.opts.map((o,j)=>`<label class="opt"><input type="radio" name="o" value="${j}"> <b>${LET[j]}.</b> ${esc(o)}</label>`).join('')}<p id="msg" class="mu"></p><div id="dist"></div><button id="go">Submit answer</button></div>`;
+app.innerHTML=`<div class="bar"><span>${esc(s.t.name)} · ${esc(s.u)}</span><span>${s.i+1} / 20</span></div><div class="prog"><i style="width:${s.i/20*100}%"></i></div><div class="card"><p class="q">${esc(q.q)}</p>${q.opts.map((o,j)=>`<label class="opt"><input type="radio" name="o" value="${j}"> <b>${LET[j]}.</b> ${esc(o)}</label>`).join('')}<p id="msg" class="mu"></p><div id="dist"></div><button id="go">Submit answer</button></div>`;
 $('#go').onclick=async()=>{const c=document.querySelector('input[name=o]:checked');if(!c)return msg('Pick an answer first.',1);const j=+c.value;$('#go').disabled=true;msg('Saving…');let r;
 try{r=await api({action:'submit',password:s.p,user:s.u,topic:s.t.id,q:s.i+1,choice:LET[j]});if(!r.ok){$('#go').disabled=false;return msg(r.error||'Save failed, try again.',1)}}catch(e){$('#go').disabled=false;return msg('Network error, try again.',1)}
 const a=LET.indexOf(r.answer),pk=LET.indexOf(r.choice),ok=r.correct?1:0;s.score+=ok;
 document.querySelectorAll('.opt').forEach((l,x)=>{const inp=l.querySelector('input');inp.disabled=true;inp.checked=x==pk;if(x==a)l.classList.add('ok');else if(x==pk)l.classList.add('bad')});
-msg((r.dup?'You already answered this question earlier; your first answer counts. ':'')+(ok?'Correct!':`Incorrect — the answer is ${LET[a]}.`),!ok);showDist(r.dist,a);const b=$('#go');b.disabled=false;b.textContent=s.i<19?'Next question':'Finish';b.onclick=()=>{s.i++;ask()}}}
+msg((r.dup?'You already answered this question earlier; your first answer counts. ':'')+(ok?'Correct!':`Incorrect — the answer is ${LET[a]}.`),ok?2:1);showDist(r.dist,a);const b=$('#go');b.disabled=false;b.textContent=s.i<19?'Next question':'Finish';b.onclick=()=>{s.i++;ask()}}}
 function showDist(c,a){const n=c.reduce((x,y)=>x+y,0);$('#dist').innerHTML=`<p class="mu">How students answered (${n} so far):</p>`+c.map((v,j)=>`<div>${LET[j]}${j==a?' ✓':''} <span class="b ${j==a?'c':''}" style="width:${n?v/n*60:0}%"></span> ${v} (${n?f(v/n*100,0):0}%)</div>`).join('')}
-function done(){app.innerHTML=`<h1>Finished</h1><div class="card"><p class="q">${esc(ST.u)}, your score: ${ST.score} / 20</p><button id="h">Back to topics</button></div>`;$('#h').onclick=home}
-function instrLogin(){app.innerHTML=`<h1>Instructor view</h1><div class="card"><label>Instructor password</label><input type="password" id="p"><p id="msg" class="mu"></p><button id="go">Open</button> <button class="link" id="bk">Back</button></div>`;$('#bk').onclick=home;
+function done(){app.innerHTML=`<div class="hero sm"><h1>Finished 🎉</h1></div><div class="card"><p class="q">${esc(ST.u)}, your score: <span class="${ST.score>=14?'okc':ST.score>=10?'':'err'}">${ST.score} / 20</span></p><button id="h">Back to topics</button></div>`;$('#h').onclick=home}
+function instrLogin(){app.innerHTML=`<div class="hero sm"><h1>Instructor view</h1></div><div class="card"><label>Instructor password</label><input type="password" id="p"><p id="msg" class="mu"></p><button id="go">Open</button> <button class="link" id="bk">Back</button></div>`;$('#bk').onclick=home;
 $('#go').onclick=async()=>{IP=$('#p').value;if(!SCRIPT_URL)return msg('Set SCRIPT_URL first.',1);try{const r=await api({action:'icheck',password:IP});if(!r.ok)return msg('Incorrect password.',1)}catch(e){return msg('Could not reach the server.',1)}instrHome()}}
-function instrHome(){app.innerHTML=`<h1>Instructor view</h1><p class="mu">Choose a topic.</p><div class="grid">${TOPICS.map((t,i)=>`<button class="topic" data-i="${i}">${esc(t.name)}</button>`).join('')}</div><p><button class="link" id="bk">Back</button></p>`;app.querySelectorAll('.topic').forEach(b=>b.onclick=()=>instrTopic(+b.dataset.i));$('#bk').onclick=home}
+function instrHome(){app.innerHTML=`<div class="hero"><h1>Instructor view</h1><p>Choose a topic to see class results.</p></div><div class="grid">${TOPICS.map((t,i)=>`<button class="topic" style="--h:${HUE[i]}" data-i="${i}">${esc(t.name)}</button>`).join('')}</div><p><button class="link" id="bk">Back</button></p>`;app.querySelectorAll('.topic').forEach(b=>b.onclick=()=>instrTopic(+b.dataset.i));$('#bk').onclick=home}
+function hist(v){const c=Array(21).fill(0);v.forEach(x=>c[x]++);const mx=Math.max(...c),st=Math.max(1,Math.ceil(mx/5)),L=44,B=36,W=640,H=250,bw=(W-L-10)/21,y=n=>H-B-n/(Math.ceil(mx/st)*st)*(H-B-16),T=`font-size:11px;fill:var(--mu)`;let o=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:720px" role="img" aria-label="Class score distribution">`;
+for(let t=0;t<=mx+st-1&&t<=Math.ceil(mx/st)*st;t+=st)o+=`<line x1="${L}" x2="${W-10}" y1="${y(t)}" y2="${y(t)}" style="stroke:var(--bd)"/><text x="${L-6}" y="${y(t)+4}" text-anchor="end" style="${T}">${t}</text>`;
+c.forEach((n,j)=>{const x=L+j*bw;if(n)o+=`<rect x="${x+2}" y="${y(n)}" width="${bw-4}" height="${H-B-y(n)}" rx="3" style="fill:var(--ac)"/><text x="${x+bw/2}" y="${y(n)-4}" text-anchor="middle" style="${T}">${n}</text>`;o+=`<text x="${x+bw/2}" y="${H-B+14}" text-anchor="middle" style="${T}">${j}</text>`});
+return o+`<text x="${(L+W)/2}" y="${H-6}" text-anchor="middle" style="${T}">Score (out of 20)</text><text transform="translate(12 ${(H-B)/2}) rotate(-90)" text-anchor="middle" style="${T}">Number of students</text></svg>`}
 async function instrTopic(i){const t=TOPICS[i];app.innerHTML=`<h1>${esc(t.name)}</h1><p class="mu">Loading…</p>`;let r;try{r=await api({action:'data',password:IP,topic:t.id})}catch(e){r={ok:false}}
 if(!r.ok){app.innerHTML=`<p class="err">Could not load data.</p><button id="bk">Back</button>`;return $('#bk').onclick=instrHome}
 const L=new Map();r.rows.forEach(x=>L.set(x[1]+'|'+x[3],x)); // latest answer per student & question
 const byQ={},byU={};L.forEach(x=>{(byQ[x[3]]=byQ[x[3]]||[]).push(x);byU[x[1]]=(byU[x[1]]||0)+(+x[5]?1:0)});
 const qs=r.qs;
-app.innerHTML=`<p><button class="link" id="bk">← Topics</button></p><h1>${esc(t.name)}</h1><button id="ta">Topic average</button><div id="tav"></div><div class="wrap"><table><tr><th>#</th><th>Question</th><th></th></tr>${qs.map((q,k)=>`<tr><td>${k+1}</td><td>${esc(q.q.slice(0,120))}${q.q.length>120?'…':''}</td><td><button class="sm" data-q="${k+1}">Summary</button></td></tr><tr id="d${k+1}" hidden><td></td><td colspan="2"></td></tr>`).join('')}</table></div>`;
+app.innerHTML=`<p><button class="link" id="bk">← Topics</button></p><div class="hero sm"><h1>${esc(t.name)}</h1></div><button id="ta">Topic average</button><div id="tav"></div><div class="wrap"><table><tr><th>#</th><th>Question</th><th></th></tr>${qs.map((q,k)=>`<tr><td>${k+1}</td><td>${esc(q.q.slice(0,120))}${q.q.length>120?'…':''}</td><td><button class="sm" data-q="${k+1}">Summary</button></td></tr><tr id="d${k+1}" hidden><td></td><td colspan="2"></td></tr>`).join('')}</table></div>`;
 $('#bk').onclick=instrHome;
-$('#ta').onclick=()=>{const v=Object.values(byU),n=v.length;$('#tav').innerHTML=n?`<div class="card"><b>Average score: ${f(v.reduce((a,b)=>a+b)/n,2)} / 20 (${f(v.reduce((a,b)=>a+b)/n*5,1)}%)</b><br>${n} student(s) · lowest ${Math.min(...v)} · highest ${Math.max(...v)}<br><span class="mu">Latest answer per question; unanswered questions count as incorrect.</span></div>`:'<div class="card">No submissions yet.</div>'};
+$('#ta').onclick=()=>{const v=Object.values(byU),n=v.length;$('#tav').innerHTML=n?`<div class="card"><b>Average score: ${f(v.reduce((a,b)=>a+b)/n,2)} / 20 (${f(v.reduce((a,b)=>a+b)/n*5,1)}%)</b><br>${n} student(s) · lowest ${Math.min(...v)} · highest ${Math.max(...v)}<br><span class="mu">Latest answer per question; unanswered questions count as incorrect.</span></div><div class="card"><b>Class score distribution</b><div class="wrap">${hist(v)}</div></div>`:'<div class="card">No submissions yet.</div>'};
 app.querySelectorAll('button[data-q]').forEach(b=>b.onclick=()=>{const k=+b.dataset.q,row=$('#d'+k),rs=byQ[k]||[],n=rs.length,cnt=[0,0,0,0];rs.forEach(x=>cnt[LET.indexOf(x[4])]++);row.hidden=!row.hidden;
-row.children[1].innerHTML=n?`<b>${n} response(s) · ${f(rs.filter(x=>+x[5]).length/n*100,0)}% correct</b>`+cnt.map((c,j)=>`<div>${LET[j]}${j==qs[k-1].ans?' ✓':''} <span class="b ${j==qs[k-1].ans?'c':''}" style="width:${c/n*60}%"></span> ${c} (${f(c/n*100,0)}%)</div>`).join(''):'No responses yet.'});}
+row.children[1].innerHTML=n?`<b>${n} response(s) · ${f(rs.filter(x=>+x[5]).length/n*100,0)}% correct</b>`+cnt.map((c,j)=>`<div>${LET[j]}. ${esc(qs[k-1].opts[j])}${j==qs[k-1].ans?' ✓':''}<br><span class="b ${j==qs[k-1].ans?'c':''}" style="width:${c/n*60}%"></span> ${c} (${f(c/n*100,0)}%)</div>`).join(''):'No responses yet.'});}
 home();
 </script></body></html>
