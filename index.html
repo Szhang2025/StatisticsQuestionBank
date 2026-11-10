@@ -24,109 +24,26 @@ table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px so
 <script>
 /* Paste your deployed Apps Script Web App URL here (see Code.gs). */
 const SCRIPT_URL='';
-const LET='ABCD',Z={90:1.645,95:1.96,99:2.576},sq=Math.sqrt;
-const f=(x,d=2)=>(+x).toFixed(d), sg=v=>v<0?`− ${-v}`:`+ ${v}`;
-const P=[.032,.087,.004,.21,.049],A=[.05,.05,.01,.1,.05];
-/* option builders: rotate so correct answers are spread over A–D (deterministic: same quiz for everyone) */
-function build(q,opts,ans,k){const r=[2,0,3,1,1,3,0,2,3,1,2,0,0,2,1,3,1,0,3,2][k%20],o=[];opts.forEach((v,j)=>o[(j+r)%4]=v);return{q,opts:o,ans:(ans+r)%4}}
-const mc=(q,c,w,k)=>build(q,[c,...w],0,k);
-const dec=(d,p,a,k)=>build(`${d} gives a p-value of ${p}. At α = ${a}, what is the correct decision?`,['Reject H0: statistically significant evidence against H0','Fail to reject H0: not enough evidence against H0','Accept H0: it has been proven true','Reject H0, because the p-value is larger than α'],p<a?0:1,k);
-const decC=(d,s,c,k)=>build(`${d}: test statistic = ${f(s)}, critical value = ${c}. What is the decision?`,['Reject H0 (statistic exceeds the critical value)','Fail to reject H0 (statistic is below the critical value)','Accept H0 as proven true','Reject H0 (statistic is below the critical value)'],s>c?0:1,k);
-const W=[['Which assumption does the Welch method NOT require?','Equal population variances',['Independent samples','Approximately normal populations or large samples','A quantitative response']],
-['How are the degrees of freedom of the Welch procedure obtained?','Welch–Satterthwite formula using both s² and n (usually not an integer)',['n1 + n2 − 2','min(n1, n2)','n1 + n2']],
-['A 95% Welch CI for μ1 − μ2 lies entirely above 0. What does this suggest?','μ1 is plausibly larger than μ2; a two-sided 5% test would reject H0: μ1 = μ2',['No evidence of a difference','μ1 − μ2 equals 0 with 95% probability','The two sample means are equal']],
-['What is the Welch standard error of x̄1 − x̄2?','√(s1²/n1 + s2²/n2)',['√((s1² + s2²)/(n1 + n2))','sp·√(1/n1 + 1/n2)','(s1 + s2)/√(n1 + n2)']],
-['Why is Welch preferred over the pooled t procedure by default?','It stays valid when variances differ and loses little when they are equal',['It always has more power','It does not need independence','It works for paired data']]];
-const chiTab=(k,hom)=>{const TB=[[[30,20],[20,30]],[[25,35,40],[35,25,20]],[[12,18],[28,22]],[[50,30,20],[30,40,30]],[[40,60],[60,40]]],CR=[3.841,5.991,3.841,5.991,3.841],t=k%4,i=(Math.floor(k/4)+(hom?2:0))%5,T=TB[i],r=T.length,c=T[0].length,rt=T.map(x=>x.reduce((a,b)=>a+b)),ct=T[0].map((_,j)=>T.reduce((a,x)=>a+x[j],0)),N=rt.reduce((a,b)=>a+b),E=(a,b)=>rt[a]*ct[b]/N;let chi=0,chiO=0,ab=0;T.forEach((x,a)=>x.forEach((o,b)=>{chi+=(o-E(a,b))**2/E(a,b);chiO+=(o-E(a,b))**2/o;ab+=Math.abs(o-E(a,b))/E(a,b)}));
-const tab=T.map((x,a)=>`Row ${a+1}: ${x.join(', ')}`).join(' | '),ctx=hom?`Independent random samples (one per row) are classified into ${c} response categories. Counts — ${tab}.`:`One random sample of ${N} subjects is cross-classified by two categorical variables. Counts — ${tab}.`;
-if(t==0)return mc(`${ctx} What is the expected count for row 1, column 1?`,f(E(0,0)),[f(T[0][0],0),f(rt[0]*ct[0],0),f(rt[0]*ct[0]/(N-1))],k);
-if(t==1)return hom?mc(`Independent random samples are taken from ${r} populations and each subject is classified into ${c} categories. Which is H0 for the chi-square test of homogeneity?`,'The distribution of the categorical response is the same in all populations',['The two variables are independent in one single population','All population means are equal','Observed counts equal expected counts in the samples'],k):mc(`${ctx} How many degrees of freedom does the test of independence have?`,`${(r-1)*(c-1)}`,[`${r*c-1}`,`${r+c-2}`,`${N-1}`],k);
-if(t==2)return mc(`${ctx} What is the chi-square statistic?`,f(chi),[f(chiO),f(ab),f(chi/2)],k);
-return decC(`${hom?'Test of homogeneity':'Test of independence'}, df = ${(r-1)*(c-1)}`,chi,CR[i],k)};
-const TOPICS=[
-{id:'z1p',name:'One-sample z test for a proportion',gen:k=>{const t=k%4,i=k>>2,n=[50,80,120,200,150][i],p0=[.5,.4,.3,.25,.6][i],x=Math.round(n*(p0+[-.08,.07,.1][(i+t)%3])),ph=x/n,se=sq(p0*(1-p0)/n),z=(ph-p0)/se;
-if(t==0)return mc(`In a random sample of ${n}, ${x} are successes. For H0: p = ${p0}, what is the z statistic?`,f(z),[f((ph-p0)/sq(ph*(1-ph)/n)),f(-z),f((ph-p0)/(p0*(1-p0)/n))],k);
-if(t==1)return mc(`Under H0: p = ${p0} with n = ${n}, what standard error does the z test use?`,f(se,4),[f(sq(ph*(1-ph)/n),4),f(p0*(1-p0)/n,4),f(sq(p0/n),4)],k);
-if(t==2)return dec(`A one-proportion z test of H0: p = ${p0}`,P[i],A[i],k);
-const m=[30,60,25,100,40][i],q0=[.5,.1,.3,.05,.6][i],a=m*q0,b=m*(1-q0);
-return build(`For n = ${m} and p0 = ${q0}, is the success–failure condition (np0 ≥ 10 and n(1−p0) ≥ 10) met for the z test?`,['Yes, the condition is met','No, np0 is below 10','No, n(1−p0) is below 10','It cannot be checked without p̂'],a>=10&&b>=10?0:a<10?1:2,k)}},
-{id:'z1ci',name:'One-sample z confidence interval for a proportion',gen:k=>{const t=k%4,i=k>>2,n=[100,150,200,400,250][i],ph=[.42,.55,.3,.62,.48][i],lv=[95,90,99,95,90][i],zs=Z[lv],se=sq(ph*(1-ph)/n),me=zs*se,lo=f(ph-me,3),hi=f(ph+me,3);
-if(t==0)return mc(`A sample of n = ${n} has p̂ = ${ph}. What is the margin of error of a ${lv}% CI for p?`,f(me,3),[f(zs*ph*(1-ph)/n,3),f(Z[lv==95?99:95]*se,3),f(se,3)],k);
-if(t==1)return mc(`A sample of n = ${n} has p̂ = ${ph}. What is the lower limit of the ${lv}% CI for p?`,lo,[hi,f(ph-2*me,3),f(ph-se,3)],k);
-if(t==2){const m=[4,9,16,4,25][i];return mc(`With the same p̂ and confidence level, the sample size is multiplied by ${m}. What happens to the margin of error?`,`It is divided by ${sq(m)}`,[`It is divided by ${m}`,`It is multiplied by ${sq(m)}`,'It stays the same'],k)}
-return mc(`A ${lv}% CI for p is (${lo}, ${hi}). Which interpretation is correct?`,`We are ${lv}% confident the true population proportion is between ${lo} and ${hi}`,[`There is a ${lv}% probability that p̂ lies between ${lo} and ${hi}`,`${lv}% of individuals in the population lie between ${lo} and ${hi}`,`The true proportion moves between ${lo} and ${hi} ${lv}% of the time`],k)}},
-{id:'t1s',name:'One-sample t test',gen:k=>{const t=k%4,i=k>>2,n=[12,16,25,30,40][i],m0=[50,100,20,75,10][i],xb=m0+[2.1,-3.5,1.4,4.2,-.9][i],s=[4.5,8,3,10,2.2][i],se=s/sq(n),T=(xb-m0)/se;
-if(t==0)return mc(`n = ${n}, x̄ = ${f(xb,1)}, s = ${s}. For H0: μ = ${m0}, what is the t statistic?`,f(T),[f(-T),f((xb-m0)/(s/n)),f((xb-m0)/s)],k);
-if(t==1)return mc(`A one-sample t test uses a sample of n = ${n}. How many degrees of freedom?`,`${n-1}`,[`${n}`,`${n-2}`,`${2*n-2}`],k);
-if(t==2)return dec(`A one-sample t test of H0: μ = ${m0}`,P[i],A[i],k);
-return mc(`A sample has n = ${n} and s = ${s}. What is the standard error of x̄?`,f(se,3),[f(s/n,3),f(s*s/n,3),f(s*sq(n),3)],k)}},
-{id:'t1ci',name:'One-sample t confidence interval',gen:k=>{const t=k%4,i=k>>2,n=[10,16,21,26,31][i],ts=[2.262,2.131,2.086,2.06,2.042][i],xb=[52,18.4,100,7.5,64][i],s=[6,2.5,12,1.8,9][i],m0=[55,18,98,7,60][i],se=s/sq(n),me=ts*se,S=`n = ${n}, x̄ = ${xb}, s = ${s}, t* = ${ts} (95%)`;
-if(t==0)return mc(`${S}. What is the margin of error of the 95% CI for μ?`,f(me,3),[f(1.96*se,3),f(ts*s/n,3),f(ts*s,3)],k);
-if(t==1)return mc(`${S}. What is the upper limit of the 95% CI for μ?`,f(xb+me,3),[f(xb-me,3),f(xb+1.96*se,3),f(xb+ts*s,3)],k);
-if(t==2)return build(`A 95% t interval for μ is (${f(xb-me,2)}, ${f(xb+me,2)}). For H0: μ = ${m0} (two-sided, α = 0.05), what follows?`,[`Fail to reject H0: ${m0} is inside the interval`,`Reject H0: ${m0} is outside the interval`,'Accept H0 as proven true','The interval cannot be used for testing'],xb-me<=m0&&m0<=xb+me?0:1,k);
-const V=[['The confidence level is raised from 95% to 99% (same data).',0],['The sample size is multiplied by 4 (same s and level).',2],['A sample has a smaller s (same n and level).',1],['The confidence level is lowered from 95% to 90%.',1],['The sample size is cut to one-fourth (same s and level).',3]][i];
-return build(`${V[0]} How does the width of the t interval change?`,['It becomes wider','It becomes narrower','It becomes about half as wide','It becomes about twice as wide'],V[1],k)}},
-{id:'t2s',name:'Two-sample t test (Welch)',gen:k=>{const t=k%4,i=k>>2,n1=[12,15,20,25,30][i],n2=[10,18,22,20,35][i],x1=[25,40,12,88,5.2][i],x2=[22,43,10.5,80,4.6][i],s1=[4,6,2.5,10,1.1][i],s2=[5,9,3.1,7,.8][i],a=s1*s1/n1,b=s2*s2/n2,se=sq(a+b),T=(x1-x2)/se,df=(a+b)**2/(a*a/(n1-1)+b*b/(n2-1)),sp=sq(((n1-1)*s1*s1+(n2-1)*s2*s2)/(n1+n2-2)),S=`Sample 1: n = ${n1}, x̄ = ${x1}, s = ${s1}. Sample 2: n = ${n2}, x̄ = ${x2}, s = ${s2}.`;
-if(t==0)return mc(`${S} What is the Welch t statistic for H0: μ1 = μ2?`,f(T),[f((x1-x2)/(sp*sq(1/n1+1/n2))),f(-T),f((x1-x2)/(s1/sq(n1)+s2/sq(n2)))],k);
-if(t==1)return mc(`${S} What is the Welch standard error of x̄1 − x̄2?`,f(se,3),[f(s1/sq(n1)+s2/sq(n2),3),f(a+b,3),f(sp*sq(1/n1+1/n2),3)],k);
-if(t==2)return mc(`${S} What are the approximate Welch degrees of freedom?`,f(df,1),[`${n1+n2-2}`,`${Math.min(n1,n2)-1}`,`${n1+n2}`],k);
-return dec(`A Welch two-sample t test of H0: μ1 = μ2`,P[i],A[i],k)}},
-{id:'t2ci',name:'Two-sample t confidence interval (Welch)',gen:k=>{const t=k%4,i=k>>2,n1=[12,15,20,25,30][i],n2=[10,18,22,20,35][i],x1=[25,40,12,88,5.2][i],x2=[22,43,10.5,80,4.6][i],s1=[4,6,2.5,10,1.1][i],s2=[5,9,3.1,7,.8][i],ts=[2.09,2.04,2.02,2.01,2][i],a=s1*s1/n1,b=s2*s2/n2,se=sq(a+b),me=ts*se,d=x1-x2,sp=sq(((n1-1)*s1*s1+(n2-1)*s2*s2)/(n1+n2-2)),S=`Sample 1: n = ${n1}, x̄ = ${x1}, s = ${s1}. Sample 2: n = ${n2}, x̄ = ${x2}, s = ${s2}. Use the Welch t* = ${ts}.`;
-if(t==0)return mc(`${S} What is the margin of error for the 95% CI for μ1 − μ2?`,f(me,3),[f(ts*(a+b),3),f(ts*sp*sq(1/n1+1/n2),3),f(se,3)],k);
-if(t==1)return mc(`${S} What is the lower limit of the 95% CI for μ1 − μ2?`,f(d-me,3),[f(d+me,3),f(d,3),f(d-me/2,3)],k);
-if(t==2)return build(`A 95% Welch CI for μ1 − μ2 is (${f(d-me)}, ${f(d+me)}). For a two-sided test of H0: μ1 = μ2 at α = 0.05, what follows?`,['Fail to reject H0: 0 is inside the interval','Reject H0: 0 is outside the interval','Accept H0: the means are proven equal','The interval cannot be used for testing'],d-me<=0&&0<=d+me?0:1,k);
-const w=W[i];return mc(w[0],w[1],w[2],k)}},
-{id:'gof',name:'Chi-square test for goodness of fit',gen:k=>{const t=k%4,i=k>>2,O=[[30,22,18,30],[45,30,25],[10,14,9,12,15],[55,70,45,30],[18,22,15,20,25,20]][i],cr=[7.815,5.991,9.488,7.815,11.07][i],N=O.reduce((a,b)=>a+b),K=O.length,E=N/K,chi=O.reduce((a,o)=>a+(o-E)**2/E,0),S=`Observed counts: ${O.join(', ')}; H0: all ${K} categories are equally likely.`;
-if(t==0)return mc(`${S} What is the expected count per category?`,f(E),[f(N/(K-1)),f(O[0],0),f(N/(K+1))],k);
-if(t==1)return mc(`${S} What is the chi-square statistic?`,f(chi),[f(O.reduce((a,o)=>a+(o-E)**2/o,0)),f(O.reduce((a,o)=>a+(o-E)**2,0)),f(O.reduce((a,o)=>a+Math.abs(o-E)/E,0))],k);
-if(t==2)return mc(`${S} How many degrees of freedom does the test have?`,`${K-1}`,[`${K}`,`${K-2}`,`${N-1}`],k);
-return decC(`Goodness of fit with ${K} categories (df = ${K-1}, α = 0.05)`,chi,cr,k)}},
-{id:'ind',name:'Chi-square test for independence',gen:k=>chiTab(k,false)},
-{id:'hom',name:'Chi-square test for homogeneity',gen:k=>chiTab(k,true)},
-{id:'anova',name:'One-way ANOVA with Tukey follow-up',gen:k=>{const t=k%5,i=Math.floor(k/5),M=[[20,24,29],[50,52,60],[10,10.5,15],[75,80,81]][i],n=[8,10,12,9][i],MW=[16,25,9,36][i],q=[3.565,3.506,3.47,3.532][i],Fc=[3.467,3.354,3.285,3.403][i],N=3*n,gm=(M[0]+M[1]+M[2])/3,SSB=n*M.reduce((a,m)=>a+(m-gm)**2,0),F=SSB/2/MW,H=q*sq(MW/n),S=`Three groups (A, B, C), n = ${n} each, means ${M.join(', ')}, MSW = ${MW}.`;
-if(t==0)return mc(`${S} What are the degrees of freedom (between and within)?`,`2 and ${N-3}`,[`3 and ${N-3}`,`2 and ${N-1}`,`${N-3} and 2`],k);
-if(t==1)return mc(`${S} What is the F statistic?`,f(F),[f(MW/(SSB/2)),f(SSB/MW),f(SSB/2)],k);
-if(t==2)return decC(`One-way ANOVA (df = 2, ${N-3}, α = 0.05; ${S})`,F,Fc,k);
-if(t==3)return mc(`Tukey follow-up: q* = ${q} (α = 0.05, 3 groups), MSW = ${MW}, n = ${n} per group. What is the HSD?`,f(H,3),[f(q*sq(MW/(2*n)),3),f(q*MW/sq(n),3),f(sq(MW/n),3)],k);
-const pr=[['A–B',Math.abs(M[0]-M[1])],['A–C',Math.abs(M[0]-M[2])],['B–C',Math.abs(M[1]-M[2])]].filter(p=>p[1]>H).map(p=>p[0]),c=pr.length==0?'No pair differs':pr.length==3?'All three pairs differ':pr.length==1?`${pr[0]} only`:pr.join(' and '),pool=['No pair differs','A–B only','A–C only','B–C only','A–C and B–C','A–B and A–C','All three pairs differ'].filter(x=>x!==c);
-return mc(`Tukey follow-up: group means A, B, C = ${M.join(', ')}, and HSD = ${f(H,2)}. Which pairs differ significantly?`,c,pool.slice(0,3),k)}},
-{id:'slr',name:'Simple linear regression',gen:k=>{const t=k%5,i=Math.floor(k/5),xb=[10,50,5,100][i],sx=[2,8,1.5,20][i],yb=[30,70,12,500][i],sy=[6,12,4,90][i],r=[.8,-.6,.7,.9][i],n=[25,30,20,40][i],b1=r*sy/sx,b0=yb-b1*xb,x0=xb+sx,yh=b0+b1*x0,S=`n = ${n}, x̄ = ${xb}, s_x = ${sx}, ȳ = ${yb}, s_y = ${sy}, r = ${r}.`;
-if(t==0)return mc(`${S} What is the least-squares slope?`,f(b1),[f(r*sx/sy),f(sy/sx),f(r)],k);
-if(t==1)return mc(`${S} What is the least-squares intercept?`,f(b0),[f(yb+b1*xb),f(b1*xb),f(yb-b1)],k);
-if(t==2)return mc(`${S} What is the predicted y at x = ${x0}?`,f(yh),[f(b0),f(b1*x0),f(yb+sy)],k);
-if(t==3)return mc(`${S} What percent of the variation in y is explained by the regression on x?`,`${f(100*r*r,1)}%`,[`${f(100*Math.abs(r),1)}%`,`${f(100*(1-r*r),1)}%`,`${f(100*(1-Math.abs(r)),1)}%`],k);
-const B1=+f(b1),B0=+f(b0),Y=B0+B1*x0,dl=[3,-4,2.5,-30][i],y0=+f(Y+dl),res=y0-Y;
-return mc(`The fitted line is ŷ = ${B0} ${sg(B1)}x. At x = ${x0} the observed y is ${y0}. What is the residual (y − ŷ)?`,f(res),[f(-res),f(y0),f(Y)],k)}},
-{id:'mlr',name:'Multiple linear regression',gen:k=>{const t=k%5,i=Math.floor(k/5),b0=[10,50,-5,100][i],b1=[2.5,-1.2,.8,15][i],b2=[-.6,3,1.5,-4][i],x1=[4,10,20,3][i],x2=[10,5,8,12][i],R=[.64,.72,.5,.85][i],n=[30,40,25,50][i],p=[2,3,2,4][i],eq=`ŷ = ${b0} ${sg(b1)}x₁ ${sg(b2)}x₂`,S=`A multiple regression has n = ${n} observations, p = ${p} predictors and R² = ${R}.`;
-if(t==0)return mc(`For ${eq}, what is the predicted y when x₁ = ${x1} and x₂ = ${x2}?`,f(b0+b1*x1+b2*x2,1),[f(b0+b1*x1,1),f(b0+b1+b2,1),f(b1*x1+b2*x2,1)],k);
-if(t==1)return mc(`In ${eq}, what does the coefficient ${b1} on x₁ mean?`,`Holding x₂ fixed, a 1-unit increase in x₁ changes the predicted y by ${b1}`,[`A 1-unit increase in x₁ changes predicted y by ${b1} whether or not x₂ is in the model`,`x₁ explains ${Math.abs(b1)}% of the variation in y`,`If x₁ and x₂ both rise by 1 unit, predicted y changes by ${b1}`],k);
-if(t==2)return mc(`${S} What is the adjusted R²?`,f(1-(1-R)*(n-1)/(n-p-1),3),[f(R,3),f(1-(1-R)*(n-1)/(n-p),3),f(1-(1-R)*(n-1)/(n-p-2),3)],k);
-if(t==3)return mc(`${S} What is the overall F statistic?`,f((R/p)/((1-R)/(n-p-1))),[f(R/(1-R)),f((R/(n-p-1))/((1-R)/p)),f(R/p)],k);
-return mc(`${S} What are the degrees of freedom of the overall F test?`,`${p} and ${n-p-1}`,[`${p-1} and ${n-p}`,`${p} and ${n-1}`,`${n-p-1} and ${p}`],k)}},
-{id:'cc',name:'Control charts (x̄, R, p)',gen:k=>{const t=k%5,i=Math.floor(k/5),n=[4,5,6,3][i],A2=[.729,.577,.483,1.023][i],D4=[2.282,2.114,2.004,2.574][i],xb=[50,100,20,12][i],Rb=[4,10,2.5,1.8][i],pb=[.04,.1,.06,.02][i],m=[100,50,200,150][i],se=sq(pb*(1-pb)/m),S=`Subgroups of n = ${n} (A₂ = ${A2}, D₃ = 0, D₄ = ${D4}), grand mean x̄̄ = ${xb}, mean range R̄ = ${Rb}.`;
-if(t==0)return mc(`${S} What is the UCL of the x̄ chart?`,f(xb+A2*Rb),[f(xb+D4*Rb),f(xb+3*Rb),f(xb-A2*Rb)],k);
-if(t==1)return mc(`${S} What is the LCL of the x̄ chart?`,f(xb-A2*Rb),[f(xb+A2*Rb),f(xb-D4*Rb),f(xb-3*Rb)],k);
-if(t==2)return mc(`${S} What is the UCL of the R chart?`,f(D4*Rb),[f(A2*Rb),f(3*Rb),f(Rb+D4)],k);
-if(t==3)return mc(`For a p chart with p̄ = ${pb} and subgroup size ${m}, what is the UCL?`,f(pb+3*se,4),[f(pb+3*pb*(1-pb)/m,4),f(pb+2*se,4),f(pb+3*sq(pb/m),4)],k);
-const raw=pb-3*se;return mc(`For a p chart with p̄ = ${pb} and subgroup size ${m}, what is the LCL?`,f(Math.max(0,raw),4),[raw<0?f(raw,4):f(pb-2*se,4),f(pb+3*se,4),f(pb,4)],k)}}
-];
+const LET='ABCD',f=(x,d=2)=>(+x).toFixed(d);
+const TOPICS=[{id:'z1p',name:'One-sample z test for a proportion'},{id:'z1ci',name:'One-sample z confidence interval for a proportion'},{id:'t1s',name:'One-sample t test'},{id:'t1ci',name:'One-sample t confidence interval'},{id:'t2s',name:'Two-sample t test (Welch)'},{id:'t2ci',name:'Two-sample t confidence interval (Welch)'},{id:'gof',name:'Chi-square test for goodness of fit'},{id:'ind',name:'Chi-square test for independence'},{id:'hom',name:'Chi-square test for homogeneity'},{id:'anova',name:'One-way ANOVA with Tukey follow-up'},{id:'slr',name:'Simple linear regression'},{id:'mlr',name:'Multiple linear regression'},{id:'cc',name:'Control charts (x̄, R, p)'}];
 /* ---------- app ---------- */
 const $=s=>document.querySelector(s),app=$('#app'),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let ST={},IP='';
-async function api(o){if(!SCRIPT_URL)return{ok:false,demo:true};const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(o)});return r.json()}
+async function api(o){if(!SCRIPT_URL)return{ok:false,error:'SCRIPT_URL is not set.'};const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(o)});return r.json()}
 const msg=(t,e)=>{const m=$('#msg');m.textContent=t;m.className=e?'err':'mu'};
-function home(){ST={};app.innerHTML=`<h1>Statistics Quiz Bank</h1><p class="mu">Pick a topic — 20 questions each.${SCRIPT_URL?'':' <b class="err">(Demo mode: SCRIPT_URL is empty, answers are not saved.)</b>'}</p><div class="grid">${TOPICS.map((t,i)=>`<button class="topic" data-i="${i}">${esc(t.name)}</button>`).join('')}</div><p><button class="link" id="ins">Instructor view</button></p>`;
+function home(){ST={};app.innerHTML=`<h1>Statistics Quiz Bank</h1><p class="mu">Pick a topic — 20 questions each.${SCRIPT_URL?'':' <b class="err">SCRIPT_URL is empty: set it to your Apps Script web app URL.</b>'}</p><div class="grid">${TOPICS.map((t,i)=>`<button class="topic" data-i="${i}">${esc(t.name)}</button>`).join('')}</div><p><button class="link" id="ins">Instructor view</button></p>`;
 app.querySelectorAll('.topic').forEach(b=>b.onclick=()=>login(+b.dataset.i));$('#ins').onclick=instrLogin}
 function login(i){const t=TOPICS[i];app.innerHTML=`<h1>${esc(t.name)}</h1><div class="card"><label>Your unique username</label><input type="text" id="u" autocomplete="off"><label>Quiz password</label><input type="password" id="p"><p id="msg" class="mu"></p><button id="go">Start quiz</button> <button class="link" id="bk">Back</button></div>`;
 $('#bk').onclick=home;$('#go').onclick=async()=>{const u=$('#u').value.trim(),p=$('#p').value;if(!u||!p)return msg('Enter both username and password.',1);msg('Checking…');
-try{const r=await api({action:'check',password:p});if(!r.ok&&!r.demo)return msg('Incorrect password.',1);}catch(e){return msg('Could not reach the server.',1)}
-ST={t,u,p,qs:Array.from({length:20},(_,k)=>t.gen(k)),i:0,score:0};ask()}}
+let r;try{r=await api({action:'check',password:p});if(!r.ok)return msg(r.error||'Incorrect password.',1);msg('Loading questions…');r=await api({action:'questions',password:p,topic:t.id});if(!r.ok)return msg(r.error||'Could not load questions.',1)}catch(e){return msg('Could not reach the server.',1)}
+ST={t,u,p,qs:r.qs,i:0,score:0};ask()}}
 function ask(){const s=ST;if(s.i>=20)return done();const q=s.qs[s.i];
 app.innerHTML=`<div class="bar"><span>${esc(s.t.name)} · ${esc(s.u)}</span><span>${s.i+1}/20</span></div><div class="card"><p class="q">${esc(q.q)}</p>${q.opts.map((o,j)=>`<label class="opt"><input type="radio" name="o" value="${j}"> <b>${LET[j]}.</b> ${esc(o)}</label>`).join('')}<p id="msg" class="mu"></p><div id="dist"></div><button id="go">Submit answer</button></div>`;
-$('#go').onclick=async()=>{const c=document.querySelector('input[name=o]:checked');if(!c)return msg('Pick an answer first.',1);const j=+c.value,ok=j==q.ans?1:0;$('#go').disabled=true;msg('Saving…');
-let r;try{r=await api({action:'submit',password:s.p,user:s.u,topic:s.t.id,q:s.i+1,choice:LET[j],correct:ok});if(!r.ok&&!r.demo){$('#go').disabled=false;return msg(r.error||'Save failed, try again.',1)}}catch(e){$('#go').disabled=false;return msg('Network error, try again.',1)}
-s.score+=ok;document.querySelectorAll('.opt').forEach((l,x)=>{l.querySelector('input').disabled=true;if(x==q.ans)l.classList.add('ok');else if(x==j)l.classList.add('bad')});
-msg(ok?'Correct!':`Incorrect — the answer is ${LET[q.ans]}.`,!ok);if(r&&r.dist)showDist(r.dist,q.ans);const b=$('#go');b.disabled=false;b.textContent=s.i<19?'Next question':'Finish';b.onclick=()=>{s.i++;ask()}}}
+$('#go').onclick=async()=>{const c=document.querySelector('input[name=o]:checked');if(!c)return msg('Pick an answer first.',1);const j=+c.value;$('#go').disabled=true;msg('Saving…');let r;
+try{r=await api({action:'submit',password:s.p,user:s.u,topic:s.t.id,q:s.i+1,choice:LET[j]});if(!r.ok){$('#go').disabled=false;return msg(r.error||'Save failed, try again.',1)}}catch(e){$('#go').disabled=false;return msg('Network error, try again.',1)}
+const a=LET.indexOf(r.answer),pk=LET.indexOf(r.choice),ok=r.correct?1:0;s.score+=ok;
+document.querySelectorAll('.opt').forEach((l,x)=>{const inp=l.querySelector('input');inp.disabled=true;inp.checked=x==pk;if(x==a)l.classList.add('ok');else if(x==pk)l.classList.add('bad')});
+msg((r.dup?'You already answered this question earlier; your first answer counts. ':'')+(ok?'Correct!':`Incorrect — the answer is ${LET[a]}.`),!ok);showDist(r.dist,a);const b=$('#go');b.disabled=false;b.textContent=s.i<19?'Next question':'Finish';b.onclick=()=>{s.i++;ask()}}}
 function showDist(c,a){const n=c.reduce((x,y)=>x+y,0);$('#dist').innerHTML=`<p class="mu">How students answered (${n} so far):</p>`+c.map((v,j)=>`<div>${LET[j]}${j==a?' ✓':''} <span class="b ${j==a?'c':''}" style="width:${n?v/n*60:0}%"></span> ${v} (${n?f(v/n*100,0):0}%)</div>`).join('')}
 function done(){app.innerHTML=`<h1>Finished</h1><div class="card"><p class="q">${esc(ST.u)}, your score: ${ST.score} / 20</p><button id="h">Back to topics</button></div>`;$('#h').onclick=home}
 function instrLogin(){app.innerHTML=`<h1>Instructor view</h1><div class="card"><label>Instructor password</label><input type="password" id="p"><p id="msg" class="mu"></p><button id="go">Open</button> <button class="link" id="bk">Back</button></div>`;$('#bk').onclick=home;
@@ -136,7 +53,7 @@ async function instrTopic(i){const t=TOPICS[i];app.innerHTML=`<h1>${esc(t.name)}
 if(!r.ok){app.innerHTML=`<p class="err">Could not load data.</p><button id="bk">Back</button>`;return $('#bk').onclick=instrHome}
 const L=new Map();r.rows.forEach(x=>L.set(x[1]+'|'+x[3],x)); // latest answer per student & question
 const byQ={},byU={};L.forEach(x=>{(byQ[x[3]]=byQ[x[3]]||[]).push(x);byU[x[1]]=(byU[x[1]]||0)+(+x[5]?1:0)});
-const qs=Array.from({length:20},(_,k)=>t.gen(k));
+const qs=r.qs;
 app.innerHTML=`<p><button class="link" id="bk">← Topics</button></p><h1>${esc(t.name)}</h1><button id="ta">Topic average</button><div id="tav"></div><div class="wrap"><table><tr><th>#</th><th>Question</th><th></th></tr>${qs.map((q,k)=>`<tr><td>${k+1}</td><td>${esc(q.q.slice(0,120))}${q.q.length>120?'…':''}</td><td><button class="sm" data-q="${k+1}">Summary</button></td></tr><tr id="d${k+1}" hidden><td></td><td colspan="2"></td></tr>`).join('')}</table></div>`;
 $('#bk').onclick=instrHome;
 $('#ta').onclick=()=>{const v=Object.values(byU),n=v.length;$('#tav').innerHTML=n?`<div class="card"><b>Average score: ${f(v.reduce((a,b)=>a+b)/n,2)} / 20 (${f(v.reduce((a,b)=>a+b)/n*5,1)}%)</b><br>${n} student(s) · lowest ${Math.min(...v)} · highest ${Math.max(...v)}<br><span class="mu">Latest answer per question; unanswered questions count as incorrect.</span></div>`:'<div class="card">No submissions yet.</div>'};
