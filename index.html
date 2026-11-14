@@ -42,6 +42,16 @@ th{background:color-mix(in srgb,var(--ac) 12%,var(--card));color:var(--ac)}
 .calc{margin:4px 0 0;font-size:.9rem}.calc a,.mu a{color:var(--ac);font-weight:600}sub{font-size:.75em;line-height:0}
 .calc code{background:color-mix(in srgb,var(--ac) 10%,var(--card));padding:0 4px;border-radius:4px;font-size:.85em}
 .bn{display:inline-flex;align-items:center;vertical-align:middle;margin:0 2px}.bn .st{display:inline-flex;flex-direction:column;align-items:center;line-height:1.1;font-size:.85em}.bn i{font-style:normal}.bn .pr{font-size:2.1em;font-weight:200;line-height:1}
+.modal{position:fixed;inset:0;background:rgba(10,12,25,.55);z-index:50;display:flex;justify-content:center;align-items:flex-start;padding:16px;overflow:auto}
+.mcard{background:var(--card);max-width:840px;width:100%;border-radius:14px;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+.mhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:1.15rem}
+.mcard details{border-top:1px solid var(--bd);padding:6px 0}.mcard summary{cursor:pointer;font-weight:700;color:var(--ac);padding:4px 0}
+.frow{display:grid;grid-template-columns:minmax(140px,210px) 1fr;gap:12px;padding:8px 0;border-bottom:1px dashed var(--bd)}
+.fname{color:var(--mu)}.fform{font-size:1.05rem;line-height:2}
+@media(max-width:620px){.frow{grid-template-columns:1fr;gap:2px}}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 3px;line-height:1.3}
+.fr>span:first-child{border-bottom:1px solid currentColor;padding:0 4px}.fr>span:last-child{padding:0 4px}
+.ov{display:inline-block;vertical-align:middle;border-top:1px solid currentColor;padding:1px 3px 0}
 </style></head><body><div id="app"></div>
 <script>
 /* Paste your deployed Apps Script Web App URL here (see Code.gs). */
@@ -74,14 +84,98 @@ const $=s=>document.querySelector(s),app=$('#app'),esc=s=>String(s).replace(/[&<
 let ST={},IP='';
 async function api(o){if(!SCRIPT_URL)return{ok:false,error:'SCRIPT_URL is not set.'};const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(o)});return r.json()}
 const msg=(t,e)=>{const m=$('#msg');m.textContent=t;m.className=e==2?'okc':e?'err':'mu'};
-function home(){ST={};app.innerHTML=`<div class="hero"><h1>Statistics Quiz Bank</h1><p>Pick a topic — 20 questions each.</p></div>${SCRIPT_URL?'':'<p class="err"><b>SCRIPT_URL is empty: set it to your Apps Script web app URL.</b></p>'}<div class="grid">${TOPICS.map((t,i)=>`<button class="topic" style="--h:${HUE[i]}" data-i="${i}">${nm(t)}</button>`).join('')}</div><p><button class="link" id="ins">Instructor view</button></p>`;
+/* ---- formula sheet ---- */
+const fr=(a,b)=>`<span class="fr"><span>${a}</span><span>${b}</span></span>`,rt=x=>`√<span class="ov">${x}</span>`,bn=(n,k)=>`<span class="bn"><span class="pr">(</span><span class="st"><i>${n}</i><i>${k}</i></span><span class="pr">)</span></span>`;
+const FORMULAS=[
+['Descriptive statistics',[
+['Sample mean',`x̄ = ${fr('Σ x<sub>i</sub>','n')}`],
+['Median','the middle value of the sorted data (the average of the two middle values when n is even)'],
+['Sample variance',`s² = ${fr('Σ (x<sub>i</sub> − x̄)²','n − 1')}`],
+['Sample standard deviation',`s = ${rt('s²')}`],
+['z-score',`z = ${fr('x − μ','σ')} &nbsp;(sample version: ${fr('x − x̄','s')})`],
+['Sample proportion',`p̂ = ${fr('x','n')}`],
+['Sample covariance',`s<sub>xy</sub> = ${fr('Σ (x<sub>i</sub> − x̄)(y<sub>i</sub> − ȳ)','n − 1')}`],
+['Pearson correlation',`r = ${fr('s<sub>xy</sub>','s<sub>x</sub> s<sub>y</sub>')} = ${fr('Σ (x<sub>i</sub> − x̄)(y<sub>i</sub> − ȳ)',rt('Σ (x<sub>i</sub> − x̄)² · Σ (y<sub>i</sub> − ȳ)²'))}`]]],
+['Sampling distributions',[
+['Standard error of x̄',`SE(x̄) = ${fr('σ',rt('n'))}`],
+['Central limit theorem','for large n, x̄ is approximately normal with mean μ and standard deviation σ/√n'],
+['Probability for x̄',`P(x̄ > c) = P(Z > ${fr('c − μ',`σ/${rt('n')}`)})`],
+['Standard error of p̂',`SE(p̂) = ${rt(fr('p(1 − p)','n'))}`]]],
+['Probability',[
+['Complement and union','P(Aᶜ) = 1 − P(A) &nbsp;&nbsp; P(A ∪ B) = P(A) + P(B) − P(A ∩ B)'],
+['Conditional probability',`P(A | B) = ${fr('P(A ∩ B)','P(B)')}`],
+['Independence','P(A ∩ B) = P(A) P(B) &nbsp;&nbsp; (disjoint: P(A ∩ B) = 0)'],
+['Total probability','P(B) = Σ P(B | A<sub>i</sub>) P(A<sub>i</sub>)'],
+['Bayes’ formula',`P(A | B) = ${fr('P(B | A) P(A)','P(B)')}`],
+['Counting','multiplication rule: n<sub>1</sub> × n<sub>2</sub> × … &nbsp;&nbsp; permutations: n!/(n − k)!'],
+['Combinations',`${bn('n','k')} = ${fr('n!','k! (n − k)!')}`],
+['Reliability','series: R = R<sub>1</sub> R<sub>2</sub> … R<sub>n</sub> &nbsp;&nbsp; parallel: R = 1 − (1 − R<sub>1</sub>)(1 − R<sub>2</sub>)…(1 − R<sub>n</sub>)'],
+['Diagnostic tests','sensitivity = P(positive | disease) &nbsp;&nbsp; specificity = P(negative | no disease)']]],
+['Random variables',[
+['Discrete mean and variance','E(X) = Σ x p(x) &nbsp;&nbsp; Var(X) = Σ (x − μ)² p(x) = E(X²) − μ²'],
+['Linear change','E(aX + b) = aE(X) + b &nbsp;&nbsp; Var(aX + b) = a² Var(X)'],
+['Sum of variables','E(X + Y) = E(X) + E(Y) &nbsp;&nbsp; Var(X + Y) = Var(X) + Var(Y) + 2 Cov(X, Y)'],
+['Binomial',`P(X = k) = ${bn('n','k')} p<sup>k</sup> (1 − p)<sup>n − k</sup> &nbsp;&nbsp; mean np, variance np(1 − p)`],
+['Poisson',`P(X = k) = ${fr('e<sup>−λ</sup> λ<sup>k</sup>','k!')} &nbsp;&nbsp; mean = variance = λ`],
+['Geometric','P(X = k) = (1 − p)<sup>k − 1</sup> p &nbsp;&nbsp; mean 1/p, variance (1 − p)/p²'],
+['Uniform (a, b)',`f(x) = ${fr('1','b − a')} &nbsp;&nbsp; mean ${fr('a + b','2')}, variance ${fr('(b − a)²','12')}`],
+['Exponential (rate λ)','f(x) = λe<sup>−λx</sup> &nbsp;&nbsp; P(X > x) = e<sup>−λx</sup> &nbsp;&nbsp; mean 1/λ, variance 1/λ²'],
+['Normal','z = (x − μ)/σ &nbsp;&nbsp; empirical rule: 68%, 95%, 99.7% within 1, 2, 3 standard deviations'],
+['Covariance and correlation',`Cov(X, Y) = E(XY) − E(X)E(Y) &nbsp;&nbsp; Corr(X, Y) = ${fr('Cov(X, Y)','σ<sub>X</sub> σ<sub>Y</sub>')} &nbsp;&nbsp; Cov(X, X) = Var(X)`]]],
+['Inference for proportions',[
+['z test statistic',`z = ${fr('p̂ − p<sub>0</sub>',rt(fr('p<sub>0</sub>(1 − p<sub>0</sub>)','n')))} &nbsp;&nbsp; condition: np<sub>0</sub> ≥ 10 and n(1 − p<sub>0</sub>) ≥ 10`],
+['Confidence interval',`p̂ ± z* ${rt(fr('p̂(1 − p̂)','n'))}`]]],
+['Inference for means',[
+['One-sample t',`t = ${fr('x̄ − μ<sub>0</sub>',`s/${rt('n')}`)} &nbsp;&nbsp; df = n − 1`],
+['Confidence interval',`x̄ ± t* ${fr('s',rt('n'))}`],
+['Welch two-sample t',`t = ${fr('x̄<sub>1</sub> − x̄<sub>2</sub>',rt(`s<sub>1</sub>²/n<sub>1</sub> + s<sub>2</sub>²/n<sub>2</sub>`))}`],
+['Welch degrees of freedom',`df = ${fr('(a + b)²',`a²/(n<sub>1</sub> − 1) + b²/(n<sub>2</sub> − 1)`)} &nbsp;, where a = s<sub>1</sub>²/n<sub>1</sub>, b = s<sub>2</sub>²/n<sub>2</sub>`],
+['Welch interval',`(x̄<sub>1</sub> − x̄<sub>2</sub>) ± t* ${rt('s<sub>1</sub>²/n<sub>1</sub> + s<sub>2</sub>²/n<sub>2</sub>')}`]]],
+['Chi-square tests',[
+['Statistic',`χ² = Σ ${fr('(O − E)²','E')}`],
+['Goodness of fit','E = N p<sub>0,i</sub> &nbsp;&nbsp; df = (number of categories) − 1'],
+['Independence / homogeneity',`E = ${fr('(row total)(column total)','N')} &nbsp;&nbsp; df = (r − 1)(c − 1)`],
+['Condition','all expected counts at least 5']]],
+['ANOVA',[
+['Sums of squares and means squares','SSB = Σ n<sub>i</sub>(x̄<sub>i</sub> − x̿)² &nbsp;&nbsp; MSB = SSB/(k − 1) &nbsp;&nbsp; MSW = SSW/(N − k)'],
+['F statistic','F = MSB/MSW &nbsp;&nbsp; df = (k − 1, N − k)'],
+['Tukey HSD',`HSD = q* ${rt('MSW/n')} &nbsp;&nbsp; (equal group size n; two means differ when |x̄<sub>i</sub> − x̄<sub>j</sub>| > HSD)`]]],
+['Regression',[
+['Simple linear regression',`b<sub>1</sub> = r ${fr('s<sub>y</sub>','s<sub>x</sub>')} &nbsp;&nbsp; b<sub>0</sub> = ȳ − b<sub>1</sub>x̄ &nbsp;&nbsp; ŷ = b<sub>0</sub> + b<sub>1</sub>x`],
+['Residual and R²','e = y − ŷ &nbsp;&nbsp; R² = SSR/SST = 1 − SSE/SST (simple regression: R² = r²)'],
+['Adjusted R²',`R²<sub>adj</sub> = 1 − (1 − R²) ${fr('n − 1','n − p − 1')}`],
+['Overall F test',`F = ${fr('R²/p','(1 − R²)/(n − p − 1)')} &nbsp;&nbsp; df = (p, n − p − 1)`]]],
+['Logistic regression',[
+['Odds and logit',`odds = ${fr('p','1 − p')} &nbsp;&nbsp; logit(p) = ln(odds) = b<sub>0</sub> + b<sub>1</sub>x`],
+['Predicted probability',`p = ${fr('1','1 + e<sup>−(b<sub>0</sub> + b<sub>1</sub>x)</sup>')}`],
+['Odds ratio','OR = e<sup>b</sup> (adjusted: holding the other variables fixed) &nbsp;&nbsp; unadjusted OR from a 2×2 table = ad/(bc)'],
+['Interval and test','95% CI for OR: e<sup>b ± 1.96 SE</sup> &nbsp;&nbsp; Wald z = b/SE']]],
+['Control charts',[
+['x̄ chart','center = x̿ &nbsp;&nbsp; UCL, LCL = x̿ ± A<sub>2</sub> R̄'],
+['R chart','UCL = D<sub>4</sub> R̄ &nbsp;&nbsp; LCL = D<sub>3</sub> R̄'],
+['p chart',`UCL, LCL = p̄ ± 3 ${rt(fr('p̄(1 − p̄)','n'))} &nbsp;&nbsp; (a negative LCL is set to 0)`]]],
+['Errors, power and sample size',[
+['Error rates','α = P(Type I error) = significance level &nbsp;&nbsp; β = P(Type II error) &nbsp;&nbsp; power = 1 − β'],
+['Right-tailed z test for a mean',`reject H<sub>0</sub> when x̄ > c, where c = μ<sub>0</sub> + z<sub>α</sub> σ/${rt('n')} &nbsp;&nbsp; power = P(x̄ > c) when μ = μ<sub>a</sub>`],
+['A/B test sample size per variation',`n = ${fr(`(z<sub>α/2</sub> ${rt('2 p̄ q̄')} + z<sub>β</sub> ${rt('p<sub>1</sub>q<sub>1</sub> + p<sub>2</sub>q<sub>2</sub>')})²`,'(p<sub>2</sub> − p<sub>1</sub>)²')} &nbsp;, p<sub>2</sub> = p<sub>1</sub>(1 + relative lift), p̄ = (p<sub>1</sub> + p<sub>2</sub>)/2`]]],
+['Data mining',[
+['Classification metrics','accuracy = (TP + TN)/N &nbsp;&nbsp; sensitivity = TP/(TP + FN) &nbsp;&nbsp; specificity = TN/(TN + FP) &nbsp;&nbsp; precision = TP/(TP + FP)'],
+['F1 score',`F1 = ${fr('2 · precision · recall','precision + recall')}`],
+['Regression metrics',`RMSE = ${rt('Σ (y − ŷ)² / n')} &nbsp;&nbsp; TSS = Σ (y<sub>i</sub> − ȳ)²`],
+['Validation','training records in k-fold CV = N(k − 1)/k &nbsp;&nbsp; lift = (response rate in the decile)/(overall response rate)'],
+['Entropy and Gini','entropy = −Σ p<sub>i</sub> log<sub>2</sub> p<sub>i</sub> &nbsp;&nbsp; Gini = 1 − Σ p<sub>i</sub>²'],
+['Distances',`Manhattan = Σ |x<sub>i</sub> − y<sub>i</sub>| &nbsp;&nbsp; Euclidean = ${rt('Σ (x<sub>i</sub> − y<sub>i</sub>)²')}`],
+['Gower distance','average over the variables of the partial distances: numeric |x − y|/range, categorical 0 (match) or 1 (mismatch)']]]
+];
+function openFormulas(){if(document.getElementById('fm'))return;const d=document.createElement('div');d.id='fm';d.className='modal';d.innerHTML=`<div class="mcard"><div class="mhead"><b>📐 Formula sheet</b><button class="sm" id="fx">Close</button></div>${FORMULAS.map((s,i)=>`<details ${i==0?'open':''}><summary>${s[0]}</summary>${s[1].map(r=>`<div class="frow"><div class="fname">${r[0]}</div><div class="fform">${r[1]}</div></div>`).join('')}</details>`).join('')}</div>`;document.body.appendChild(d);document.getElementById('fx').onclick=()=>d.remove();d.onclick=e=>{if(e.target===d)d.remove()}}
+function home(){ST={};app.innerHTML=`<div class="hero"><h1>Statistics Quiz Bank</h1><p>Pick a topic — 20 questions each.</p></div>${SCRIPT_URL?'':'<p class="err"><b>SCRIPT_URL is empty: set it to your Apps Script web app URL.</b></p>'}<div class="grid">${TOPICS.map((t,i)=>`<button class="topic" style="--h:${HUE[i]}" data-i="${i}">${nm(t)}</button>`).join('')}</div><p><button class="link" id="ins">Instructor view</button> &nbsp;·&nbsp; <button class="link" onclick="openFormulas()">📐 Formula sheet</button></p>`;
 app.querySelectorAll('.topic').forEach(b=>b.onclick=()=>login(+b.dataset.i));$('#ins').onclick=instrLogin}
 function login(i){const t=TOPICS[i];app.innerHTML=`<div class="hero sm"><h1>${nm(t)}</h1></div><div class="card"><label>Your unique username</label><input type="text" id="u" autocomplete="off"><label>Quiz password</label><input type="password" id="p"><p id="msg" class="mu"></p><button id="go">Start quiz</button> <button class="link" id="bk">Back</button></div>`;
 $('#bk').onclick=home;$('#go').onclick=async()=>{const u=$('#u').value.trim(),p=$('#p').value;if(!u||!p)return msg('Enter both username and password.',1);msg('Checking…');
 let r;try{r=await api({action:'check',password:p});if(!r.ok)return msg(r.error||'Incorrect password.',1);msg('Loading questions…');r=await api({action:'questions',password:p,topic:t.id,user:u});if(!r.ok)return msg(r.error||'Could not load questions.',1)}catch(e){return msg('Could not reach the server.',1)}
 ST={t,u,p,qs:r.qs,i:0,score:0};ask()}}
 function ask(){const s=ST;if(s.i>=20)return done();const q=s.qs[s.i];
-app.innerHTML=`<div class="bar"><span>${nm(s.t)} · ${esc(s.u)}</span><span>${s.i+1} / 20</span></div><div class="prog"><i style="width:${s.i/20*100}%"></i></div><p class="mu calc">🧮 <a href="https://www.geogebra.org/calculator" target="_blank" rel="noopener">Open the GeoGebra calculator</a> for calculations and for areas under z, t, chi-square and F curves. For a critical value, use its Probability Calculator, or type <code>InverseNormal(0, 1, P)</code>, <code>InverseTDistribution(df, P)</code>, <code>InverseChiSquared(df, P)</code> or <code>InverseFDistribution(df1, df2, P)</code>, where P is the area to the left of the value.</p><div class="card"><p class="q">${sb(q.q)}</p>${q.tbl?`<details class="dt" id="dt"><summary>📊 ${TNAME[q.tbl]} table (click to open)</summary><div id="tbc"></div></details>`:''}${q.opts.map((o,j)=>`<label class="opt"><input type="radio" name="o" value="${j}"> <b>${LET[j]}.</b> ${sb(o)}</label>`).join('')}<p id="msg" class="mu"></p><div id="dist"></div><button id="go">Submit answer</button></div>`;
+app.innerHTML=`<div class="bar"><span>${nm(s.t)} · ${esc(s.u)}</span><span>${s.i+1} / 20</span></div><div class="prog"><i style="width:${s.i/20*100}%"></i></div><p class="mu calc">🧮 <a href="https://www.geogebra.org/calculator" target="_blank" rel="noopener">Open the GeoGebra calculator</a> for calculations and for areas under z, t, chi-square and F curves. For a critical value, use its Probability Calculator, or type <code>InverseNormal(0, 1, P)</code>, <code>InverseTDistribution(df, P)</code>, <code>InverseChiSquared(df, P)</code> or <code>InverseFDistribution(df1, df2, P)</code>, where P is the area to the left of the value. <button class="link" onclick="openFormulas()">📐 Formula sheet</button></p><div class="card"><p class="q">${sb(q.q)}</p>${q.tbl?`<details class="dt" id="dt"><summary>📊 ${TNAME[q.tbl]} table (click to open)</summary><div id="tbc"></div></details>`:''}${q.opts.map((o,j)=>`<label class="opt"><input type="radio" name="o" value="${j}"> <b>${LET[j]}.</b> ${sb(o)}</label>`).join('')}<p id="msg" class="mu"></p><div id="dist"></div><button id="go">Submit answer</button></div>`;
 if(q.tbl)$('#dt').ontoggle=()=>{if($('#dt').open&&!$('#tbc').innerHTML)showTbl(q.tbl,.05)};
 $('#go').onclick=async()=>{const c=document.querySelector('input[name=o]:checked');if(!c)return msg('Pick an answer first.',1);const j=+c.value;$('#go').disabled=true;msg('Saving…');let r;
 try{r=await api({action:'submit',password:s.p,user:s.u,topic:s.t.id,q:s.i+1,choice:LET[j]});if(!r.ok){$('#go').disabled=false;return msg(r.error||'Save failed, try again.',1)}}catch(e){$('#go').disabled=false;return msg('Network error, try again.',1)}
