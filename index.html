@@ -60,7 +60,7 @@ th{background:color-mix(in srgb,var(--ac) 12%,var(--card));color:var(--ac)}
 /* Paste your deployed Apps Script Web App URL here (see Code.gs). */
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwT23TWc7m_g_e1GIl66fYOJ9OXcjvlz6xO8VYbjrRayfFKbV_SY6mQf4pYrcDd7nWTrg/exec';
 const HUE=Array.from({length:60},(_,i)=>(215+i*47)%360),LET='ABCD',f=(x,d=2)=>(+x).toFixed(d);
-const TOPICS=[{id:'prob',name:'Probability: counting, conditional probability and Bayes'},{id:'rv',name:'Random variables, distributions and correlation'},{id:'desc',name:'Descriptive statistics and sampling distributions'},{id:'z1p',name:'One-sample z test for a proportion'},{id:'z1ci',name:'One-sample z confidence interval for a proportion'},{id:'t1s',name:'One-sample t test'},{id:'t1ci',name:'One-sample t confidence interval'},{id:'t2s',name:'Two-sample t test (Welch)'},{id:'t2ci',name:'Two-sample t confidence interval (Welch)'},{id:'gof',name:'Chi-square test for goodness of fit'},{id:'ind',name:'Chi-square test for independence'},{id:'hom',name:'Chi-square test for homogeneity'},{id:'anova',name:'One-way ANOVA with Tukey follow-up'},{id:'slr',name:'Simple linear regression'},{id:'mlr',name:'Multiple linear regression'},{id:'logit',name:'Logistic regression: odds ratios (adjusted & unadjusted)'},{id:'cc',name:'Control charts (x̄, R, p)'},{id:'pow',name:'Type I/II errors, α, β and power'},{id:'ab',name:'A/B testing and sample size'},{id:'dm1',name:'Data mining: model evaluation'},{id:'dm2',name:'Data mining: entropy, impurity and distance'},{id:'rcode',name:'Basic R coding'}];
+const TOPICS=[{id:'prob',name:'Probability: counting, conditional probability and Bayes'},{id:'rv',name:'Random variables, distributions and correlation'},{id:'desc',name:'Descriptive statistics and sampling distributions'},{id:'z1p',name:'One-sample z test for a proportion'},{id:'z1ci',name:'One-sample z confidence interval for a proportion'},{id:'t1s',name:'One-sample t test'},{id:'t1ci',name:'One-sample t confidence interval'},{id:'t2s',name:'Two-sample t test (Welch)'},{id:'t2ci',name:'Two-sample t confidence interval (Welch)'},{id:'gof',name:'Chi-square test for goodness of fit'},{id:'ind',name:'Chi-square test for independence'},{id:'hom',name:'Chi-square test for homogeneity'},{id:'anova',name:'One-way ANOVA with Tukey follow-up'},{id:'slr',name:'Simple linear regression'},{id:'mlr',name:'Multiple linear regression'},{id:'logit',name:'Logistic regression: odds ratios (adjusted & unadjusted)'},{id:'cc',name:'Control charts (x̄, R, p)'},{id:'pow',name:'Type I/II errors, α, β and power'},{id:'ab',name:'A/B testing and sample size'},{id:'dm1',name:'Data mining: model evaluation'},{id:'dm2',name:'Data mining: entropy, impurity and distance'},{id:'rcode',name:'Basic R coding'},{id:'ethics',name:'Data ethics'}];
 /* ---------- app ---------- */
 /* ---- distribution tables shown next to p-value questions (computed here) ---- */
 const lnG=z=>{const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=z,t=z+5.5;t-=(z+.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/z)};
@@ -95,7 +95,8 @@ t=t.replace(/(?<![A-Za-z])(np|p|n|s|x|q|μ|σ)([012])(?![0-9A-Za-z])/g,(m,a,i)=>
 t=t.replace(/([χσ])²/g,(m,a)=>MK(`${GK[a]}^2`));
 t=t.replace(/(?<![A-Za-z])([sRr])²/g,(m,a)=>MK(`${a}^2`));
 return t.replace(/[αβλμσχπ]/g,m=>MK(GK[m]))}
-const sb=t=>{const e=esc(t);if(typeof katex==='undefined')return SUB(e.replace(/\\\((.*?)\\\)/g,'$1'));return e.split(/(\\\(.*?\\\))/g).map((p,i)=>i%2?p:MATH(p)).join('')};
+const LB=e=>e.replace(/ \| Row /g,'<br>Row ').replace(/ Counts — Row /g,'<br>Row ').replace(/\. (Sample 2:)/g,'.<br>$1').replace(/; (actual negative)/g,';<br>$1').replace(/\. (Record B:)/g,'.<br>$1').replace(/; (H0:)/g,';<br>$1').replace(/\. (Unexposed group:)/g,'.<br>$1').replace(/ (Unadjusted \(crude\) analysis\.)/g,'$1<br>').replace(/\. (Use the Welch)/g,'.<br>$1');
+const sb=t=>{const e=LB(esc(t));if(typeof katex==='undefined')return SUB(e.replace(/\\\((.*?)\\\)/g,'$1'));return e.split(/(\\\(.*?\\\))/g).map((p,i)=>i%2?p:MATH(p)).join('')};
 const cutq=q=>q.length>120&&!q.includes('\\(')?q.slice(0,120)+'…':q;
 const RM=()=>{if(typeof renderMathInElement==='function')renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false,ignoredTags:['script','noscript','style','textarea','code']})};
 const MO=new MutationObserver(()=>{if(MO.t)return;MO.t=setTimeout(()=>{MO.t=0;MO.disconnect();try{RM()}finally{MO.observe(document.body,{childList:true,subtree:true})}},20)});
@@ -104,7 +105,7 @@ const $=s=>document.querySelector(s),app=$('#app'),esc=s=>String(s).replace(/[&<
 let ST={},IP='';
 async function api(o){if(!SCRIPT_URL)return{ok:false,error:'SCRIPT_URL is not set.'};const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(o)});return r.json()}
 const msg=(t,e)=>{const m=$('#msg');m.textContent=t;m.className=e==2?'okc':e?'err':'mu'};
-/* ---- formula sheet (LaTeX, rendered by KaTeX) ---- */
+/* ---- formula sheet (LaTeX, rendered by KaTeX); one formula per row ---- */
 const L=String.raw,M=x=>L`\(\displaystyle ${x}\)`;
 const FORMULAS=[
 ['Descriptive statistics',[
@@ -112,80 +113,140 @@ const FORMULAS=[
 ['Median','the middle value of the sorted data (the average of the two middle values when n is even)'],
 ['Sample variance',M(L`s^2=\frac{\sum (x_i-\bar{x})^2}{n-1}`)],
 ['Sample standard deviation',M(L`s=\sqrt{s^2}`)],
-['z-score',M(L`z=\frac{x-\mu}{\sigma}`)+L` &nbsp; (sample version: \(\displaystyle\frac{x-\bar{x}}{s}\))`],
+['z-score (population)',M(L`z=\frac{x-\mu}{\sigma}`)],
+['z-score (sample)',M(L`z=\frac{x-\bar{x}}{s}`)],
 ['Sample proportion',M(L`\hat{p}=\frac{x}{n}`)],
 ['Sample covariance',M(L`s_{xy}=\frac{\sum (x_i-\bar{x})(y_i-\bar{y})}{n-1}`)],
-['Pearson correlation',M(L`r=\frac{s_{xy}}{s_x s_y}=\frac{\sum (x_i-\bar{x})(y_i-\bar{y})}{\sqrt{\sum (x_i-\bar{x})^2\,\sum (y_i-\bar{y})^2}}`)]]],
+['Pearson correlation',M(L`r=\frac{s_{xy}}{s_x s_y}`)],
+['Pearson correlation (from the data)',M(L`r=\frac{\sum (x_i-\bar{x})(y_i-\bar{y})}{\sqrt{\sum (x_i-\bar{x})^2\,\sum (y_i-\bar{y})^2}}`)]]],
 ['Sampling distributions',[
 ['Standard error of the mean',M(L`SE(\bar{x})=\frac{\sigma}{\sqrt{n}}`)],
-['Central limit theorem',L`for large \(n\): \(\displaystyle \bar{x}\approx N\!\left(\mu,\ \frac{\sigma}{\sqrt{n}}\right)\)`],
+['Central limit theorem',M(L`\bar{x}\approx N\!\left(\mu,\ \frac{\sigma}{\sqrt{n}}\right)`)+' for large n'],
 ['Probability for the sample mean',M(L`P(\bar{x}>c)=P\!\left(Z>\frac{c-\mu}{\sigma/\sqrt{n}}\right)`)],
 ['Standard error of the proportion',M(L`SE(\hat{p})=\sqrt{\frac{p(1-p)}{n}}`)]]],
 ['Probability',[
-['Complement and union',M(L`P(A^c)=1-P(A)\qquad P(A\cup B)=P(A)+P(B)-P(A\cap B)`)],
+['Complement',M(L`P(A^c)=1-P(A)`)],
+['Union',M(L`P(A\cup B)=P(A)+P(B)-P(A\cap B)`)],
 ['Conditional probability',M(L`P(A\mid B)=\frac{P(A\cap B)}{P(B)}`)],
-['Independence and disjointness',M(L`\text{independent: }P(A\cap B)=P(A)P(B)\qquad\text{disjoint: }P(A\cap B)=0`)],
+['Independent events',M(L`P(A\cap B)=P(A)\,P(B)`)],
+['Disjoint (mutually exclusive) events',M(L`P(A\cap B)=0`)],
 ['Total probability',M(L`P(B)=\sum_i P(B\mid A_i)\,P(A_i)`)],
 ['Bayes’ formula',M(L`P(A\mid B)=\frac{P(B\mid A)\,P(A)}{P(B)}`)],
-['Counting',M(L`n_1\times n_2\times\cdots\times n_m\qquad \frac{n!}{(n-k)!}`)+' (multiplication rule; ordered selections)'],
+['Multiplication rule for counting',M(L`n_1\times n_2\times\cdots\times n_m`)],
+['Ordered selections (permutations)',M(L`\frac{n!}{(n-k)!}`)],
 ['Combinations',M(L`\binom{n}{k}=\frac{n!}{k!\,(n-k)!}`)],
-['Reliability',M(L`\text{series: }R=\prod_i R_i\qquad\text{parallel: }R=1-\prod_i(1-R_i)`)],
-['Diagnostic tests',M(L`\text{sensitivity}=P(+\mid D)\qquad\text{specificity}=P(-\mid D^c)`)]]],
+['Series system reliability',M(L`R=\prod_i R_i`)],
+['Parallel system reliability',M(L`R=1-\prod_i(1-R_i)`)],
+['Sensitivity',M(L`P(\text{positive test}\mid\text{disease})`)],
+['Specificity',M(L`P(\text{negative test}\mid\text{no disease})`)]]],
 ['Random variables',[
-['Discrete mean and variance',M(L`E(X)=\sum x\,p(x)\qquad Var(X)=\sum (x-\mu)^2p(x)=E(X^2)-\mu^2`)],
-['Linear change',M(L`E(aX+b)=aE(X)+b\qquad Var(aX+b)=a^2Var(X)`)],
-['Sum of variables',M(L`E(X+Y)=E(X)+E(Y)\qquad Var(X+Y)=Var(X)+Var(Y)+2\,Cov(X,Y)`)],
-['Binomial',M(L`P(X=k)=\binom{n}{k}p^k(1-p)^{n-k}\qquad \mu=np\quad \sigma^2=np(1-p)`)],
-['Poisson',M(L`P(X=k)=\frac{e^{-\lambda}\lambda^k}{k!}\qquad \mu=\sigma^2=\lambda`)],
-['Geometric',M(L`P(X=k)=(1-p)^{k-1}p\qquad \mu=\frac{1}{p}\quad \sigma^2=\frac{1-p}{p^2}`)],
-['Uniform on (a, b)',M(L`f(x)=\frac{1}{b-a}\qquad \mu=\frac{a+b}{2}\quad \sigma^2=\frac{(b-a)^2}{12}`)],
-['Exponential (rate λ)',M(L`f(x)=\lambda e^{-\lambda x}\quad P(X>x)=e^{-\lambda x}\quad \mu=\frac{1}{\lambda}\quad \sigma^2=\frac{1}{\lambda^2}`)],
-['Normal',M(L`z=\frac{x-\mu}{\sigma}`)+' &nbsp; empirical rule: 68%, 95%, 99.7% within 1, 2, 3 standard deviations'],
-['Covariance and correlation',M(L`Cov(X,Y)=E(XY)-E(X)E(Y)\qquad Corr(X,Y)=\frac{Cov(X,Y)}{\sigma_X\sigma_Y}\qquad Cov(X,X)=Var(X)`)]]],
+['Mean of a discrete variable',M(L`E(X)=\sum x\,p(x)`)],
+['Variance of a discrete variable',M(L`Var(X)=\sum (x-\mu)^2p(x)=E(X^2)-\mu^2`)],
+['Mean of a linear change',M(L`E(aX+b)=aE(X)+b`)],
+['Variance of a linear change',M(L`Var(aX+b)=a^2Var(X)`)],
+['Mean of a sum',M(L`E(X+Y)=E(X)+E(Y)`)],
+['Variance of a sum',M(L`Var(X+Y)=Var(X)+Var(Y)+2\,Cov(X,Y)`)],
+['Binomial probability',M(L`P(X=k)=\binom{n}{k}p^k(1-p)^{n-k}`)],
+['Binomial mean',M(L`\mu=np`)],
+['Binomial variance',M(L`\sigma^2=np(1-p)`)],
+['Poisson probability',M(L`P(X=k)=\frac{e^{-\lambda}\lambda^k}{k!}`)],
+['Poisson mean and variance',M(L`\mu=\sigma^2=\lambda`)],
+['Geometric probability',M(L`P(X=k)=(1-p)^{k-1}p`)],
+['Geometric mean',M(L`\mu=\frac{1}{p}`)],
+['Geometric variance',M(L`\sigma^2=\frac{1-p}{p^2}`)],
+['Uniform density on (a, b)',M(L`f(x)=\frac{1}{b-a}`)],
+['Uniform mean',M(L`\mu=\frac{a+b}{2}`)],
+['Uniform variance',M(L`\sigma^2=\frac{(b-a)^2}{12}`)],
+['Exponential density',M(L`f(x)=\lambda e^{-\lambda x}`)],
+['Exponential tail probability',M(L`P(X>x)=e^{-\lambda x}`)],
+['Exponential mean',M(L`\mu=\frac{1}{\lambda}`)],
+['Exponential variance',M(L`\sigma^2=\frac{1}{\lambda^2}`)],
+['Standardizing a normal value',M(L`z=\frac{x-\mu}{\sigma}`)],
+['Empirical rule','about 68%, 95% and 99.7% of values lie within 1, 2 and 3 standard deviations of the mean'],
+['Covariance',M(L`Cov(X,Y)=E(XY)-E(X)E(Y)`)],
+['Correlation',M(L`Corr(X,Y)=\frac{Cov(X,Y)}{\sigma_X\sigma_Y}`)],
+['Covariance of a variable with itself',M(L`Cov(X,X)=Var(X)`)]]],
 ['Inference for proportions',[
-['z test statistic',M(L`z=\frac{\hat{p}-p_0}{\sqrt{p_0(1-p_0)/n}}`)+L` &nbsp; condition: \(np_0\ge 10\) and \(n(1-p_0)\ge 10\)`],
+['z test statistic',M(L`z=\frac{\hat{p}-p_0}{\sqrt{p_0(1-p_0)/n}}`)],
+['Condition for the z test',M(L`np_0\ge 10\quad\text{and}\quad n(1-p_0)\ge 10`)],
 ['Confidence interval',M(L`\hat{p}\pm z^*\sqrt{\frac{\hat{p}(1-\hat{p})}{n}}`)]]],
 ['Inference for means',[
-['One-sample t',M(L`t=\frac{\bar{x}-\mu_0}{s/\sqrt{n}}`)+L` &nbsp; \(df=n-1\)`],
-['Confidence interval',M(L`\bar{x}\pm t^*\frac{s}{\sqrt{n}}`)],
-['Welch two-sample t',M(L`t=\frac{\bar{x}_1-\bar{x}_2}{\sqrt{\dfrac{s_1^2}{n_1}+\dfrac{s_2^2}{n_2}}}`)],
-['Welch degrees of freedom',M(L`df=\frac{(a+b)^2}{\dfrac{a^2}{n_1-1}+\dfrac{b^2}{n_2-1}}`)+L` &nbsp; where \(a=s_1^2/n_1,\ b=s_2^2/n_2\)`],
-['Welch interval',M(L`(\bar{x}_1-\bar{x}_2)\pm t^*\sqrt{\frac{s_1^2}{n_1}+\frac{s_2^2}{n_2}}`)]]],
+['One-sample t statistic',M(L`t=\frac{\bar{x}-\mu_0}{s/\sqrt{n}}`)],
+['One-sample degrees of freedom',M(L`df=n-1`)],
+['One-sample confidence interval',M(L`\bar{x}\pm t^*\frac{s}{\sqrt{n}}`)],
+['Welch t statistic',M(L`t=\frac{\bar{x}_1-\bar{x}_2}{\sqrt{\dfrac{s_1^2}{n_1}+\dfrac{s_2^2}{n_2}}}`)],
+['Welch degrees of freedom',M(L`df=\frac{(a+b)^2}{\dfrac{a^2}{n_1-1}+\dfrac{b^2}{n_2-1}}`)],
+['Terms in the Welch degrees of freedom',M(L`a=\frac{s_1^2}{n_1},\qquad b=\frac{s_2^2}{n_2}`)],
+['Welch confidence interval',M(L`(\bar{x}_1-\bar{x}_2)\pm t^*\sqrt{\frac{s_1^2}{n_1}+\frac{s_2^2}{n_2}}`)]]],
 ['Chi-square tests',[
-['Statistic',M(L`\chi^2=\sum\frac{(O-E)^2}{E}`)],
-['Goodness of fit',M(L`E_i=N p_{0,i}\qquad df=k-1`)],
-['Independence / homogeneity',M(L`E=\frac{(\text{row total})(\text{column total})}{N}\qquad df=(r-1)(c-1)`)],
-['Condition','all expected counts at least 5']]],
+['Chi-square statistic',M(L`\chi^2=\sum\frac{(O-E)^2}{E}`)],
+['Goodness of fit: expected count',M(L`E_i=N\,p_{0,i}`)],
+['Goodness of fit: degrees of freedom',M(L`df=k-1`)],
+['Independence / homogeneity: expected count',M(L`E=\frac{(\text{row total})(\text{column total})}{N}`)],
+['Independence / homogeneity: degrees of freedom',M(L`df=(r-1)(c-1)`)],
+['Condition','all expected counts are at least 5']]],
 ['ANOVA',[
-['Mean squares',M(L`SSB=\sum n_i(\bar{x}_i-\bar{\bar{x}})^2\qquad MSB=\frac{SSB}{k-1}\qquad MSW=\frac{SSW}{N-k}`)],
-['F statistic',M(L`F=\frac{MSB}{MSW}\qquad df=(k-1,\ N-k)`)],
-['Tukey HSD',M(L`HSD=q^*\sqrt{\frac{MSW}{n}}`)+L` &nbsp; (equal group size \(n\); two means differ when \(|\bar{x}_i-\bar{x}_j|>HSD\))`]]],
+['Between-group sum of squares',M(L`SSB=\sum n_i(\bar{x}_i-\bar{\bar{x}})^2`)],
+['Mean square between',M(L`MSB=\frac{SSB}{k-1}`)],
+['Mean square within',M(L`MSW=\frac{SSW}{N-k}`)],
+['F statistic',M(L`F=\frac{MSB}{MSW}`)],
+['Degrees of freedom',M(L`df=(k-1,\ N-k)`)],
+['Tukey HSD (equal group size n)',M(L`HSD=q^*\sqrt{\frac{MSW}{n}}`)],
+['Tukey decision rule',M(L`|\bar{x}_i-\bar{x}_j|>HSD\ \Rightarrow\ \text{the two means differ}`)]]],
 ['Regression',[
-['Simple linear regression',M(L`b_1=r\,\frac{s_y}{s_x}\qquad b_0=\bar{y}-b_1\bar{x}\qquad \hat{y}=b_0+b_1x`)],
-['Residual and R²',M(L`e=y-\hat{y}\qquad R^2=\frac{SSR}{SST}=1-\frac{SSE}{SST}`)+L` &nbsp; (simple regression: \(R^2=r^2\))`],
+['Slope',M(L`b_1=r\,\frac{s_y}{s_x}`)],
+['Intercept',M(L`b_0=\bar{y}-b_1\bar{x}`)],
+['Fitted line',M(L`\hat{y}=b_0+b_1x`)],
+['Residual',M(L`e=y-\hat{y}`)],
+['SST (total sum of squares): total variation in y',M(L`SST=\sum (y_i-\bar{y})^2`)],
+['SSR (regression sum of squares): variation explained by the model',M(L`SSR=\sum (\hat{y}_i-\bar{y})^2`)],
+['SSE (error sum of squares): unexplained variation (residuals)',M(L`SSE=\sum (y_i-\hat{y}_i)^2`)],
+['Decomposition',M(L`SST=SSR+SSE`)],
+['Coefficient of determination',M(L`R^2=\frac{SSR}{SST}=1-\frac{SSE}{SST}`)],
+['R² in simple regression',M(L`R^2=r^2`)],
 ['Adjusted R²',M(L`R^2_{adj}=1-(1-R^2)\frac{n-1}{n-p-1}`)],
-['Overall F test',M(L`F=\frac{R^2/p}{(1-R^2)/(n-p-1)}\qquad df=(p,\ n-p-1)`)]]],
+['Overall F statistic',M(L`F=\frac{R^2/p}{(1-R^2)/(n-p-1)}=\frac{SSR/p}{SSE/(n-p-1)}`)],
+['Overall F degrees of freedom',M(L`df=(p,\ n-p-1)`)]]],
 ['Logistic regression',[
-['Odds and logit',M(L`\text{odds}=\frac{p}{1-p}\qquad \text{logit}(p)=\ln\frac{p}{1-p}=b_0+b_1x`)],
+['Odds',M(L`\text{odds}=\frac{p}{1-p}`)],
+['Logit (log-odds) model',M(L`\text{logit}(p)=\ln\frac{p}{1-p}=b_0+b_1x`)],
 ['Predicted probability',M(L`p=\frac{1}{1+e^{-(b_0+b_1x)}}`)],
-['Odds ratio',M(L`OR=e^{b}\qquad \text{unadjusted OR from a 2×2 table}=\frac{ad}{bc}`)+' (adjusted: holding the other variables fixed)'],
-['Interval and test',M(L`95\%\text{ CI for }OR:\ e^{\,b\pm1.96\,SE}\qquad \text{Wald }z=\frac{b}{SE}`)]]],
+['Unadjusted (crude) odds ratio from a 2×2 table (a, b = exposed with / without the outcome; c, d = unexposed with / without)',M(L`OR_{\text{unadjusted}}=\frac{a\,d}{b\,c}`)],
+['Adjusted odds ratio from a logistic model (holding the other variables fixed)',M(L`OR_{\text{adjusted}}=e^{b}`)],
+['Odds ratio for a k-unit increase in x',M(L`OR=e^{k\,b}`)],
+['95% confidence interval for the odds ratio',M(L`e^{\,b\pm1.96\,SE}`)],
+['Wald test statistic',M(L`z=\frac{b}{SE}`)]]],
 ['Control charts',[
-['x̄ chart',M(L`\text{center}=\bar{\bar{x}}\qquad UCL,\ LCL=\bar{\bar{x}}\pm A_2\bar{R}`)],
-['R chart',M(L`UCL=D_4\bar{R}\qquad LCL=D_3\bar{R}`)],
-['p chart',M(L`UCL,\ LCL=\bar{p}\pm3\sqrt{\frac{\bar{p}(1-\bar{p})}{n}}`)+' (a negative LCL is set to 0)']]],
+['x̄ chart: center line',M(L`CL=\bar{\bar{x}}`)],
+['x̄ chart: control limits',M(L`UCL,\ LCL=\bar{\bar{x}}\pm A_2\bar{R}`)],
+['R chart: upper control limit',M(L`UCL=D_4\bar{R}`)],
+['R chart: lower control limit',M(L`LCL=D_3\bar{R}`)],
+['p chart: control limits',M(L`UCL,\ LCL=\bar{p}\pm3\sqrt{\frac{\bar{p}(1-\bar{p})}{n}}`)],
+['p chart: negative lower limit','a negative LCL is set to 0']]],
 ['Errors, power and sample size',[
-['Error rates',M(L`\alpha=P(\text{Type I error})\qquad \beta=P(\text{Type II error})\qquad \text{power}=1-\beta`)],
-['Right-tailed z test for a mean',L`reject \(H_0\) when \(\bar{x}>c\), where \(\displaystyle c=\mu_0+z_\alpha\frac{\sigma}{\sqrt{n}}\); power \(=P(\bar{x}>c)\) when \(\mu=\mu_a\)`],
-['A/B test sample size per variation',M(L`n=\frac{\left(z_{\alpha/2}\sqrt{2\bar{p}\bar{q}}+z_{\beta}\sqrt{p_1q_1+p_2q_2}\right)^2}{(p_2-p_1)^2}`)+L` &nbsp; \(p_2=p_1(1+\text{relative lift}),\ \bar{p}=(p_1+p_2)/2\)`]]],
+['Type I error rate (significance level)',M(L`\alpha=P(\text{reject }H_0\mid H_0\text{ true})`)],
+['Type II error rate',M(L`\beta=P(\text{fail to reject }H_0\mid H_0\text{ false})`)],
+['Power',M(L`\text{power}=1-\beta`)],
+['Right-tailed z test: rejection cutoff',M(L`c=\mu_0+z_\alpha\frac{\sigma}{\sqrt{n}}`)],
+['Right-tailed z test: power',M(L`P(\bar{x}>c)\ \text{ when }\mu=\mu_a`)],
+['A/B test: variation B rate',M(L`p_2=p_1(1+\text{relative lift})`)],
+['A/B test: sample size per variation',M(L`n=\frac{\left(z_{\alpha/2}\sqrt{2\bar{p}\bar{q}}+z_{\beta}\sqrt{p_1q_1+p_2q_2}\right)^2}{(p_2-p_1)^2}`)],
+['A/B test: average rate',M(L`\bar{p}=\frac{p_1+p_2}{2},\qquad \bar{q}=1-\bar{p}`)]]],
 ['Data mining',[
-['Classification metrics',M(L`\text{accuracy}=\frac{TP+TN}{N}\quad \text{sensitivity}=\frac{TP}{TP+FN}\quad \text{specificity}=\frac{TN}{TN+FP}\quad \text{precision}=\frac{TP}{TP+FP}`)],
+['Accuracy',M(L`\frac{TP+TN}{N}`)],
+['Sensitivity (recall)',M(L`\frac{TP}{TP+FN}`)],
+['Specificity',M(L`\frac{TN}{TN+FP}`)],
+['Precision',M(L`\frac{TP}{TP+FP}`)],
 ['F1 score',M(L`F_1=\frac{2\cdot\text{precision}\cdot\text{recall}}{\text{precision}+\text{recall}}`)],
-['Regression metrics',M(L`RMSE=\sqrt{\frac{\sum (y-\hat{y})^2}{n}}\qquad TSS=\sum (y_i-\bar{y})^2`)],
-['Validation',L`records used for training in k-fold CV: \(\displaystyle \frac{N(k-1)}{k}\); lift \(=\) (response rate in the decile) / (overall response rate)`],
-['Entropy and Gini',M(L`\text{entropy}=-\sum p_i\log_2 p_i\qquad \text{Gini}=1-\sum p_i^2`)],
-['Distances',M(L`\text{Manhattan}=\sum |x_i-y_i|\qquad \text{Euclidean}=\sqrt{\sum (x_i-y_i)^2}`)],
-['Gower distance','average over the variables of the partial distances: numeric |x − y| / range, categorical 0 (match) or 1 (mismatch)']]]
+['RMSE',M(L`RMSE=\sqrt{\frac{\sum (y-\hat{y})^2}{n}}`)],
+['Total sum of squares',M(L`TSS=\sum (y_i-\bar{y})^2`)],
+['Training records in k-fold cross-validation',M(L`\frac{N(k-1)}{k}`)],
+['Decile lift',M(L`\frac{\text{response rate in the decile}}{\text{overall response rate}}`)],
+['Entropy',M(L`-\sum p_i\log_2 p_i`)],
+['Gini impurity',M(L`1-\sum p_i^2`)],
+['Manhattan distance',M(L`\sum |x_i-y_i|`)],
+['Euclidean distance',M(L`\sqrt{\sum (x_i-y_i)^2}`)],
+['Gower distance','average over the variables of the partial distances: numeric |x − y| / range; categorical 0 (match) or 1 (mismatch)']]]
 ];
 function openFormulas(){if(document.getElementById('fm'))return;const d=document.createElement('div');d.id='fm';d.className='modal';d.innerHTML=`<div class="mcard"><div class="mhead"><b>📐 Formula sheet</b><button class="sm" id="fx">Close</button></div>${typeof katex==='undefined'?'<p class="err">The math notation library could not be loaded (check your internet connection); formulas are shown as LaTeX source.</p>':''}${FORMULAS.map((s,i)=>`<details ${i==0?'open':''}><summary>${s[0]}</summary>${s[1].map(r=>`<div class="frow"><div class="fname">${r[0]}</div><div class="fform">${r[1]}</div></div>`).join('')}</details>`).join('')}</div>`;document.body.appendChild(d);document.getElementById('fx').onclick=()=>d.remove();d.onclick=e=>{if(e.target===d)d.remove()}}
 function home(){ST={};app.innerHTML=`<div class="hero"><h1>Statistics Quiz Bank</h1><p>Pick a topic — 20 questions each.</p></div>${SCRIPT_URL?'':'<p class="err"><b>SCRIPT_URL is empty: set it to your Apps Script web app URL.</b></p>'}<div class="grid">${TOPICS.map((t,i)=>`<button class="topic" style="--h:${HUE[i]}" data-i="${i}">${nm(t)}</button>`).join('')}</div><p><button class="link" id="ins">Instructor view</button> &nbsp;·&nbsp; <button class="link" onclick="openFormulas()">📐 Formula sheet</button></p>`;
