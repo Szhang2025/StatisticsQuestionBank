@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Statistics Quiz Bank</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 <style>
 :root{--bg:#f3f4fb;--card:#fff;--tx:#1e2235;--mu:#667085;--ac:#4f46e5;--ac2:#06b6d4;--ok:#16a34a;--bad:#dc2626;--bd:#dfe3f0;--l:46%;--sh:0 2px 10px rgba(60,60,140,.08)}
 @media(prefers-color-scheme:dark){:root{--bg:#10131d;--card:#1a1f31;--tx:#e8ebf6;--mu:#9aa5bf;--ac:#8b93ff;--ac2:#22d3ee;--ok:#4ade80;--bad:#ff7b7b;--bd:#2b3350;--l:64%;--sh:0 2px 12px rgba(0,0,0,.35)}}
@@ -78,96 +81,113 @@ else{const C=[1,2,3,4,5,6,7,8,9,10,12,15,20,24,30,40,60,120];cap=`F table: criti
 return `<p class="mu">${cap}</p><div class="tw"><table class="tt">${h}</table></div>`}
 function showTbl(kind,a){const box=$('#tbc');const tabs=kind=='f'?`<div class="tabs">${[.1,.05,.025,.01].map(x=>`<button class="sm ${x==a?'':'ghost'}" data-a="${x}">α = ${x}</button>`).join(' ')}</div>`:'';box.innerHTML=`<p class="mu">You can also find the area under the ${TNAME[kind]} curve with the Probability Calculator in <a href="https://www.geogebra.org/calculator" target="_blank" rel="noopener">GeoGebra</a>.</p>`+tabs+tableHTML(kind,a);box.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>showTbl(kind,+b.dataset.a))}
 const SUB=t=>t.replace(/⟦(\d+)\|(\d+)⟧/g,'<span class="bn"><span class="pr">(</span><span class="st"><i>$1</i><i>$2</i></span><span class="pr">)</span></span>').replace(/p([12])q([12])/g,'p<sub>$1</sub>q<sub>$2</sub>').replace(/z_\{([^}]+)\}/g,'z<sub>$1</sub>').replace(/z_β/g,'z<sub>β</sub>').replace(/\bH([01])\b/g,'H<sub>$1</sub>').replace(/(?<![A-Za-z])(np|x̄|p|n|s|x|q|μ|σ)([012])(?![0-9A-Za-z])/g,'$1<sub>$2</sub>');
-const sb=t=>SUB(esc(t));
+const MK=x=>'\\('+x+'\\)',GK={α:'\\alpha',β:'\\beta',λ:'\\lambda',μ:'\\mu',σ:'\\sigma',χ:'\\chi',π:'\\pi'},SD={'₀':0,'₁':1,'₂':2,'₃':3,'₄':4};
+function MATH(t){t=t.normalize('NFD');
+t=t.replace(/⟦(\d+)\|(\d+)⟧/g,(m,a,b)=>MK(`\\binom{${a}}{${b}}`));
+t=t.replace(/([A-Za-z])\u0304\u0304/g,(m,a)=>MK(`\\bar{\\bar{${a}}}`));
+t=t.replace(/([A-Za-z])\u0304([012])?(?![0-9A-Za-z])/g,(m,a,i)=>MK(`\\bar{${a}}${i?'_'+i:''}`));
+t=t.replace(/([A-Za-z])\u0302/g,(m,a)=>MK(`\\hat{${a}}`));
+t=t.replace(/\bH([01])\b/g,(m,i)=>MK(`H_${i}`));
+t=t.replace(/\bp([12])q([12])\b/g,(m,a,b)=>MK(`p_${a}q_${b}`));
+t=t.replace(/([A-Za-z])([₀₁₂₃₄])/g,(m,a,d)=>MK(`${a}_${SD[d]}`));
+t=t.replace(/([A-Za-z])ᵢ/g,(m,a)=>MK(`${a}_i`));
+t=t.replace(/(?<![A-Za-z])(np|p|n|s|x|q|μ|σ)([012])(?![0-9A-Za-z])/g,(m,a,i)=>MK(`${GK[a]||a}_${i}`));
+t=t.replace(/([χσ])²/g,(m,a)=>MK(`${GK[a]}^2`));
+t=t.replace(/(?<![A-Za-z])([sRr])²/g,(m,a)=>MK(`${a}^2`));
+return t.replace(/[αβλμσχπ]/g,m=>MK(GK[m]))}
+const sb=t=>{const e=esc(t);if(typeof katex==='undefined')return SUB(e.replace(/\\\((.*?)\\\)/g,'$1'));return e.split(/(\\\(.*?\\\))/g).map((p,i)=>i%2?p:MATH(p)).join('')};
+const cutq=q=>q.length>120&&!q.includes('\\(')?q.slice(0,120)+'…':q;
+const RM=()=>{if(typeof renderMathInElement==='function')renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false,ignoredTags:['script','noscript','style','textarea','code']})};
+const MO=new MutationObserver(()=>{if(MO.t)return;MO.t=setTimeout(()=>{MO.t=0;MO.disconnect();try{RM()}finally{MO.observe(document.body,{childList:true,subtree:true})}},20)});
 const nm=t=>esc(`${TOPICS.indexOf(t)+1}. ${t.name}`);
 const $=s=>document.querySelector(s),app=$('#app'),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let ST={},IP='';
 async function api(o){if(!SCRIPT_URL)return{ok:false,error:'SCRIPT_URL is not set.'};const r=await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(o)});return r.json()}
 const msg=(t,e)=>{const m=$('#msg');m.textContent=t;m.className=e==2?'okc':e?'err':'mu'};
-/* ---- formula sheet ---- */
-const fr=(a,b)=>`<span class="fr"><span>${a}</span><span>${b}</span></span>`,rt=x=>`√<span class="ov">${x}</span>`,bn=(n,k)=>`<span class="bn"><span class="pr">(</span><span class="st"><i>${n}</i><i>${k}</i></span><span class="pr">)</span></span>`;
+/* ---- formula sheet (LaTeX, rendered by KaTeX) ---- */
+const L=String.raw,M=x=>L`\(\displaystyle ${x}\)`;
 const FORMULAS=[
 ['Descriptive statistics',[
-['Sample mean',`x̄ = ${fr('Σ x<sub>i</sub>','n')}`],
+['Sample mean',M(L`\bar{x}=\frac{\sum x_i}{n}`)],
 ['Median','the middle value of the sorted data (the average of the two middle values when n is even)'],
-['Sample variance',`s² = ${fr('Σ (x<sub>i</sub> − x̄)²','n − 1')}`],
-['Sample standard deviation',`s = ${rt('s²')}`],
-['z-score',`z = ${fr('x − μ','σ')} &nbsp;(sample version: ${fr('x − x̄','s')})`],
-['Sample proportion',`p̂ = ${fr('x','n')}`],
-['Sample covariance',`s<sub>xy</sub> = ${fr('Σ (x<sub>i</sub> − x̄)(y<sub>i</sub> − ȳ)','n − 1')}`],
-['Pearson correlation',`r = ${fr('s<sub>xy</sub>','s<sub>x</sub> s<sub>y</sub>')} = ${fr('Σ (x<sub>i</sub> − x̄)(y<sub>i</sub> − ȳ)',rt('Σ (x<sub>i</sub> − x̄)² · Σ (y<sub>i</sub> − ȳ)²'))}`]]],
+['Sample variance',M(L`s^2=\frac{\sum (x_i-\bar{x})^2}{n-1}`)],
+['Sample standard deviation',M(L`s=\sqrt{s^2}`)],
+['z-score',M(L`z=\frac{x-\mu}{\sigma}`)+L` &nbsp; (sample version: \(\displaystyle\frac{x-\bar{x}}{s}\))`],
+['Sample proportion',M(L`\hat{p}=\frac{x}{n}`)],
+['Sample covariance',M(L`s_{xy}=\frac{\sum (x_i-\bar{x})(y_i-\bar{y})}{n-1}`)],
+['Pearson correlation',M(L`r=\frac{s_{xy}}{s_x s_y}=\frac{\sum (x_i-\bar{x})(y_i-\bar{y})}{\sqrt{\sum (x_i-\bar{x})^2\,\sum (y_i-\bar{y})^2}}`)]]],
 ['Sampling distributions',[
-['Standard error of x̄',`SE(x̄) = ${fr('σ',rt('n'))}`],
-['Central limit theorem','for large n, x̄ is approximately normal with mean μ and standard deviation σ/√n'],
-['Probability for x̄',`P(x̄ > c) = P(Z > ${fr('c − μ',`σ/${rt('n')}`)})`],
-['Standard error of p̂',`SE(p̂) = ${rt(fr('p(1 − p)','n'))}`]]],
+['Standard error of the mean',M(L`SE(\bar{x})=\frac{\sigma}{\sqrt{n}}`)],
+['Central limit theorem',L`for large \(n\): \(\displaystyle \bar{x}\approx N\!\left(\mu,\ \frac{\sigma}{\sqrt{n}}\right)\)`],
+['Probability for the sample mean',M(L`P(\bar{x}>c)=P\!\left(Z>\frac{c-\mu}{\sigma/\sqrt{n}}\right)`)],
+['Standard error of the proportion',M(L`SE(\hat{p})=\sqrt{\frac{p(1-p)}{n}}`)]]],
 ['Probability',[
-['Complement and union','P(Aᶜ) = 1 − P(A) &nbsp;&nbsp; P(A ∪ B) = P(A) + P(B) − P(A ∩ B)'],
-['Conditional probability',`P(A | B) = ${fr('P(A ∩ B)','P(B)')}`],
-['Independence','P(A ∩ B) = P(A) P(B) &nbsp;&nbsp; (disjoint: P(A ∩ B) = 0)'],
-['Total probability','P(B) = Σ P(B | A<sub>i</sub>) P(A<sub>i</sub>)'],
-['Bayes’ formula',`P(A | B) = ${fr('P(B | A) P(A)','P(B)')}`],
-['Counting','multiplication rule: n<sub>1</sub> × n<sub>2</sub> × … &nbsp;&nbsp; permutations: n!/(n − k)!'],
-['Combinations',`${bn('n','k')} = ${fr('n!','k! (n − k)!')}`],
-['Reliability','series: R = R<sub>1</sub> R<sub>2</sub> … R<sub>n</sub> &nbsp;&nbsp; parallel: R = 1 − (1 − R<sub>1</sub>)(1 − R<sub>2</sub>)…(1 − R<sub>n</sub>)'],
-['Diagnostic tests','sensitivity = P(positive | disease) &nbsp;&nbsp; specificity = P(negative | no disease)']]],
+['Complement and union',M(L`P(A^c)=1-P(A)\qquad P(A\cup B)=P(A)+P(B)-P(A\cap B)`)],
+['Conditional probability',M(L`P(A\mid B)=\frac{P(A\cap B)}{P(B)}`)],
+['Independence and disjointness',M(L`\text{independent: }P(A\cap B)=P(A)P(B)\qquad\text{disjoint: }P(A\cap B)=0`)],
+['Total probability',M(L`P(B)=\sum_i P(B\mid A_i)\,P(A_i)`)],
+['Bayes’ formula',M(L`P(A\mid B)=\frac{P(B\mid A)\,P(A)}{P(B)}`)],
+['Counting',M(L`n_1\times n_2\times\cdots\times n_m\qquad \frac{n!}{(n-k)!}`)+' (multiplication rule; ordered selections)'],
+['Combinations',M(L`\binom{n}{k}=\frac{n!}{k!\,(n-k)!}`)],
+['Reliability',M(L`\text{series: }R=\prod_i R_i\qquad\text{parallel: }R=1-\prod_i(1-R_i)`)],
+['Diagnostic tests',M(L`\text{sensitivity}=P(+\mid D)\qquad\text{specificity}=P(-\mid D^c)`)]]],
 ['Random variables',[
-['Discrete mean and variance','E(X) = Σ x p(x) &nbsp;&nbsp; Var(X) = Σ (x − μ)² p(x) = E(X²) − μ²'],
-['Linear change','E(aX + b) = aE(X) + b &nbsp;&nbsp; Var(aX + b) = a² Var(X)'],
-['Sum of variables','E(X + Y) = E(X) + E(Y) &nbsp;&nbsp; Var(X + Y) = Var(X) + Var(Y) + 2 Cov(X, Y)'],
-['Binomial',`P(X = k) = ${bn('n','k')} p<sup>k</sup> (1 − p)<sup>n − k</sup> &nbsp;&nbsp; mean np, variance np(1 − p)`],
-['Poisson',`P(X = k) = ${fr('e<sup>−λ</sup> λ<sup>k</sup>','k!')} &nbsp;&nbsp; mean = variance = λ`],
-['Geometric','P(X = k) = (1 − p)<sup>k − 1</sup> p &nbsp;&nbsp; mean 1/p, variance (1 − p)/p²'],
-['Uniform (a, b)',`f(x) = ${fr('1','b − a')} &nbsp;&nbsp; mean ${fr('a + b','2')}, variance ${fr('(b − a)²','12')}`],
-['Exponential (rate λ)','f(x) = λe<sup>−λx</sup> &nbsp;&nbsp; P(X > x) = e<sup>−λx</sup> &nbsp;&nbsp; mean 1/λ, variance 1/λ²'],
-['Normal','z = (x − μ)/σ &nbsp;&nbsp; empirical rule: 68%, 95%, 99.7% within 1, 2, 3 standard deviations'],
-['Covariance and correlation',`Cov(X, Y) = E(XY) − E(X)E(Y) &nbsp;&nbsp; Corr(X, Y) = ${fr('Cov(X, Y)','σ<sub>X</sub> σ<sub>Y</sub>')} &nbsp;&nbsp; Cov(X, X) = Var(X)`]]],
+['Discrete mean and variance',M(L`E(X)=\sum x\,p(x)\qquad Var(X)=\sum (x-\mu)^2p(x)=E(X^2)-\mu^2`)],
+['Linear change',M(L`E(aX+b)=aE(X)+b\qquad Var(aX+b)=a^2Var(X)`)],
+['Sum of variables',M(L`E(X+Y)=E(X)+E(Y)\qquad Var(X+Y)=Var(X)+Var(Y)+2\,Cov(X,Y)`)],
+['Binomial',M(L`P(X=k)=\binom{n}{k}p^k(1-p)^{n-k}\qquad \mu=np\quad \sigma^2=np(1-p)`)],
+['Poisson',M(L`P(X=k)=\frac{e^{-\lambda}\lambda^k}{k!}\qquad \mu=\sigma^2=\lambda`)],
+['Geometric',M(L`P(X=k)=(1-p)^{k-1}p\qquad \mu=\frac{1}{p}\quad \sigma^2=\frac{1-p}{p^2}`)],
+['Uniform on (a, b)',M(L`f(x)=\frac{1}{b-a}\qquad \mu=\frac{a+b}{2}\quad \sigma^2=\frac{(b-a)^2}{12}`)],
+['Exponential (rate λ)',M(L`f(x)=\lambda e^{-\lambda x}\quad P(X>x)=e^{-\lambda x}\quad \mu=\frac{1}{\lambda}\quad \sigma^2=\frac{1}{\lambda^2}`)],
+['Normal',M(L`z=\frac{x-\mu}{\sigma}`)+' &nbsp; empirical rule: 68%, 95%, 99.7% within 1, 2, 3 standard deviations'],
+['Covariance and correlation',M(L`Cov(X,Y)=E(XY)-E(X)E(Y)\qquad Corr(X,Y)=\frac{Cov(X,Y)}{\sigma_X\sigma_Y}\qquad Cov(X,X)=Var(X)`)]]],
 ['Inference for proportions',[
-['z test statistic',`z = ${fr('p̂ − p<sub>0</sub>',rt(fr('p<sub>0</sub>(1 − p<sub>0</sub>)','n')))} &nbsp;&nbsp; condition: np<sub>0</sub> ≥ 10 and n(1 − p<sub>0</sub>) ≥ 10`],
-['Confidence interval',`p̂ ± z* ${rt(fr('p̂(1 − p̂)','n'))}`]]],
+['z test statistic',M(L`z=\frac{\hat{p}-p_0}{\sqrt{p_0(1-p_0)/n}}`)+L` &nbsp; condition: \(np_0\ge 10\) and \(n(1-p_0)\ge 10\)`],
+['Confidence interval',M(L`\hat{p}\pm z^*\sqrt{\frac{\hat{p}(1-\hat{p})}{n}}`)]]],
 ['Inference for means',[
-['One-sample t',`t = ${fr('x̄ − μ<sub>0</sub>',`s/${rt('n')}`)} &nbsp;&nbsp; df = n − 1`],
-['Confidence interval',`x̄ ± t* ${fr('s',rt('n'))}`],
-['Welch two-sample t',`t = ${fr('x̄<sub>1</sub> − x̄<sub>2</sub>',rt(`s<sub>1</sub>²/n<sub>1</sub> + s<sub>2</sub>²/n<sub>2</sub>`))}`],
-['Welch degrees of freedom',`df = ${fr('(a + b)²',`a²/(n<sub>1</sub> − 1) + b²/(n<sub>2</sub> − 1)`)} &nbsp;, where a = s<sub>1</sub>²/n<sub>1</sub>, b = s<sub>2</sub>²/n<sub>2</sub>`],
-['Welch interval',`(x̄<sub>1</sub> − x̄<sub>2</sub>) ± t* ${rt('s<sub>1</sub>²/n<sub>1</sub> + s<sub>2</sub>²/n<sub>2</sub>')}`]]],
+['One-sample t',M(L`t=\frac{\bar{x}-\mu_0}{s/\sqrt{n}}`)+L` &nbsp; \(df=n-1\)`],
+['Confidence interval',M(L`\bar{x}\pm t^*\frac{s}{\sqrt{n}}`)],
+['Welch two-sample t',M(L`t=\frac{\bar{x}_1-\bar{x}_2}{\sqrt{\dfrac{s_1^2}{n_1}+\dfrac{s_2^2}{n_2}}}`)],
+['Welch degrees of freedom',M(L`df=\frac{(a+b)^2}{\dfrac{a^2}{n_1-1}+\dfrac{b^2}{n_2-1}}`)+L` &nbsp; where \(a=s_1^2/n_1,\ b=s_2^2/n_2\)`],
+['Welch interval',M(L`(\bar{x}_1-\bar{x}_2)\pm t^*\sqrt{\frac{s_1^2}{n_1}+\frac{s_2^2}{n_2}}`)]]],
 ['Chi-square tests',[
-['Statistic',`χ² = Σ ${fr('(O − E)²','E')}`],
-['Goodness of fit','E = N p<sub>0,i</sub> &nbsp;&nbsp; df = (number of categories) − 1'],
-['Independence / homogeneity',`E = ${fr('(row total)(column total)','N')} &nbsp;&nbsp; df = (r − 1)(c − 1)`],
+['Statistic',M(L`\chi^2=\sum\frac{(O-E)^2}{E}`)],
+['Goodness of fit',M(L`E_i=N p_{0,i}\qquad df=k-1`)],
+['Independence / homogeneity',M(L`E=\frac{(\text{row total})(\text{column total})}{N}\qquad df=(r-1)(c-1)`)],
 ['Condition','all expected counts at least 5']]],
 ['ANOVA',[
-['Sums of squares and means squares','SSB = Σ n<sub>i</sub>(x̄<sub>i</sub> − x̿)² &nbsp;&nbsp; MSB = SSB/(k − 1) &nbsp;&nbsp; MSW = SSW/(N − k)'],
-['F statistic','F = MSB/MSW &nbsp;&nbsp; df = (k − 1, N − k)'],
-['Tukey HSD',`HSD = q* ${rt('MSW/n')} &nbsp;&nbsp; (equal group size n; two means differ when |x̄<sub>i</sub> − x̄<sub>j</sub>| > HSD)`]]],
+['Mean squares',M(L`SSB=\sum n_i(\bar{x}_i-\bar{\bar{x}})^2\qquad MSB=\frac{SSB}{k-1}\qquad MSW=\frac{SSW}{N-k}`)],
+['F statistic',M(L`F=\frac{MSB}{MSW}\qquad df=(k-1,\ N-k)`)],
+['Tukey HSD',M(L`HSD=q^*\sqrt{\frac{MSW}{n}}`)+L` &nbsp; (equal group size \(n\); two means differ when \(|\bar{x}_i-\bar{x}_j|>HSD\))`]]],
 ['Regression',[
-['Simple linear regression',`b<sub>1</sub> = r ${fr('s<sub>y</sub>','s<sub>x</sub>')} &nbsp;&nbsp; b<sub>0</sub> = ȳ − b<sub>1</sub>x̄ &nbsp;&nbsp; ŷ = b<sub>0</sub> + b<sub>1</sub>x`],
-['Residual and R²','e = y − ŷ &nbsp;&nbsp; R² = SSR/SST = 1 − SSE/SST (simple regression: R² = r²)'],
-['Adjusted R²',`R²<sub>adj</sub> = 1 − (1 − R²) ${fr('n − 1','n − p − 1')}`],
-['Overall F test',`F = ${fr('R²/p','(1 − R²)/(n − p − 1)')} &nbsp;&nbsp; df = (p, n − p − 1)`]]],
+['Simple linear regression',M(L`b_1=r\,\frac{s_y}{s_x}\qquad b_0=\bar{y}-b_1\bar{x}\qquad \hat{y}=b_0+b_1x`)],
+['Residual and R²',M(L`e=y-\hat{y}\qquad R^2=\frac{SSR}{SST}=1-\frac{SSE}{SST}`)+L` &nbsp; (simple regression: \(R^2=r^2\))`],
+['Adjusted R²',M(L`R^2_{adj}=1-(1-R^2)\frac{n-1}{n-p-1}`)],
+['Overall F test',M(L`F=\frac{R^2/p}{(1-R^2)/(n-p-1)}\qquad df=(p,\ n-p-1)`)]]],
 ['Logistic regression',[
-['Odds and logit',`odds = ${fr('p','1 − p')} &nbsp;&nbsp; logit(p) = ln(odds) = b<sub>0</sub> + b<sub>1</sub>x`],
-['Predicted probability',`p = ${fr('1','1 + e<sup>−(b<sub>0</sub> + b<sub>1</sub>x)</sup>')}`],
-['Odds ratio','OR = e<sup>b</sup> (adjusted: holding the other variables fixed) &nbsp;&nbsp; unadjusted OR from a 2×2 table = ad/(bc)'],
-['Interval and test','95% CI for OR: e<sup>b ± 1.96 SE</sup> &nbsp;&nbsp; Wald z = b/SE']]],
+['Odds and logit',M(L`\text{odds}=\frac{p}{1-p}\qquad \text{logit}(p)=\ln\frac{p}{1-p}=b_0+b_1x`)],
+['Predicted probability',M(L`p=\frac{1}{1+e^{-(b_0+b_1x)}}`)],
+['Odds ratio',M(L`OR=e^{b}\qquad \text{unadjusted OR from a 2×2 table}=\frac{ad}{bc}`)+' (adjusted: holding the other variables fixed)'],
+['Interval and test',M(L`95\%\text{ CI for }OR:\ e^{\,b\pm1.96\,SE}\qquad \text{Wald }z=\frac{b}{SE}`)]]],
 ['Control charts',[
-['x̄ chart','center = x̿ &nbsp;&nbsp; UCL, LCL = x̿ ± A<sub>2</sub> R̄'],
-['R chart','UCL = D<sub>4</sub> R̄ &nbsp;&nbsp; LCL = D<sub>3</sub> R̄'],
-['p chart',`UCL, LCL = p̄ ± 3 ${rt(fr('p̄(1 − p̄)','n'))} &nbsp;&nbsp; (a negative LCL is set to 0)`]]],
+['x̄ chart',M(L`\text{center}=\bar{\bar{x}}\qquad UCL,\ LCL=\bar{\bar{x}}\pm A_2\bar{R}`)],
+['R chart',M(L`UCL=D_4\bar{R}\qquad LCL=D_3\bar{R}`)],
+['p chart',M(L`UCL,\ LCL=\bar{p}\pm3\sqrt{\frac{\bar{p}(1-\bar{p})}{n}}`)+' (a negative LCL is set to 0)']]],
 ['Errors, power and sample size',[
-['Error rates','α = P(Type I error) = significance level &nbsp;&nbsp; β = P(Type II error) &nbsp;&nbsp; power = 1 − β'],
-['Right-tailed z test for a mean',`reject H<sub>0</sub> when x̄ > c, where c = μ<sub>0</sub> + z<sub>α</sub> σ/${rt('n')} &nbsp;&nbsp; power = P(x̄ > c) when μ = μ<sub>a</sub>`],
-['A/B test sample size per variation',`n = ${fr(`(z<sub>α/2</sub> ${rt('2 p̄ q̄')} + z<sub>β</sub> ${rt('p<sub>1</sub>q<sub>1</sub> + p<sub>2</sub>q<sub>2</sub>')})²`,'(p<sub>2</sub> − p<sub>1</sub>)²')} &nbsp;, p<sub>2</sub> = p<sub>1</sub>(1 + relative lift), p̄ = (p<sub>1</sub> + p<sub>2</sub>)/2`]]],
+['Error rates',M(L`\alpha=P(\text{Type I error})\qquad \beta=P(\text{Type II error})\qquad \text{power}=1-\beta`)],
+['Right-tailed z test for a mean',L`reject \(H_0\) when \(\bar{x}>c\), where \(\displaystyle c=\mu_0+z_\alpha\frac{\sigma}{\sqrt{n}}\); power \(=P(\bar{x}>c)\) when \(\mu=\mu_a\)`],
+['A/B test sample size per variation',M(L`n=\frac{\left(z_{\alpha/2}\sqrt{2\bar{p}\bar{q}}+z_{\beta}\sqrt{p_1q_1+p_2q_2}\right)^2}{(p_2-p_1)^2}`)+L` &nbsp; \(p_2=p_1(1+\text{relative lift}),\ \bar{p}=(p_1+p_2)/2\)`]]],
 ['Data mining',[
-['Classification metrics','accuracy = (TP + TN)/N &nbsp;&nbsp; sensitivity = TP/(TP + FN) &nbsp;&nbsp; specificity = TN/(TN + FP) &nbsp;&nbsp; precision = TP/(TP + FP)'],
-['F1 score',`F1 = ${fr('2 · precision · recall','precision + recall')}`],
-['Regression metrics',`RMSE = ${rt('Σ (y − ŷ)² / n')} &nbsp;&nbsp; TSS = Σ (y<sub>i</sub> − ȳ)²`],
-['Validation','training records in k-fold CV = N(k − 1)/k &nbsp;&nbsp; lift = (response rate in the decile)/(overall response rate)'],
-['Entropy and Gini','entropy = −Σ p<sub>i</sub> log<sub>2</sub> p<sub>i</sub> &nbsp;&nbsp; Gini = 1 − Σ p<sub>i</sub>²'],
-['Distances',`Manhattan = Σ |x<sub>i</sub> − y<sub>i</sub>| &nbsp;&nbsp; Euclidean = ${rt('Σ (x<sub>i</sub> − y<sub>i</sub>)²')}`],
-['Gower distance','average over the variables of the partial distances: numeric |x − y|/range, categorical 0 (match) or 1 (mismatch)']]]
+['Classification metrics',M(L`\text{accuracy}=\frac{TP+TN}{N}\quad \text{sensitivity}=\frac{TP}{TP+FN}\quad \text{specificity}=\frac{TN}{TN+FP}\quad \text{precision}=\frac{TP}{TP+FP}`)],
+['F1 score',M(L`F_1=\frac{2\cdot\text{precision}\cdot\text{recall}}{\text{precision}+\text{recall}}`)],
+['Regression metrics',M(L`RMSE=\sqrt{\frac{\sum (y-\hat{y})^2}{n}}\qquad TSS=\sum (y_i-\bar{y})^2`)],
+['Validation',L`records used for training in k-fold CV: \(\displaystyle \frac{N(k-1)}{k}\); lift \(=\) (response rate in the decile) / (overall response rate)`],
+['Entropy and Gini',M(L`\text{entropy}=-\sum p_i\log_2 p_i\qquad \text{Gini}=1-\sum p_i^2`)],
+['Distances',M(L`\text{Manhattan}=\sum |x_i-y_i|\qquad \text{Euclidean}=\sqrt{\sum (x_i-y_i)^2}`)],
+['Gower distance','average over the variables of the partial distances: numeric |x − y| / range, categorical 0 (match) or 1 (mismatch)']]]
 ];
-function openFormulas(){if(document.getElementById('fm'))return;const d=document.createElement('div');d.id='fm';d.className='modal';d.innerHTML=`<div class="mcard"><div class="mhead"><b>📐 Formula sheet</b><button class="sm" id="fx">Close</button></div>${FORMULAS.map((s,i)=>`<details ${i==0?'open':''}><summary>${s[0]}</summary>${s[1].map(r=>`<div class="frow"><div class="fname">${r[0]}</div><div class="fform">${r[1]}</div></div>`).join('')}</details>`).join('')}</div>`;document.body.appendChild(d);document.getElementById('fx').onclick=()=>d.remove();d.onclick=e=>{if(e.target===d)d.remove()}}
+function openFormulas(){if(document.getElementById('fm'))return;const d=document.createElement('div');d.id='fm';d.className='modal';d.innerHTML=`<div class="mcard"><div class="mhead"><b>📐 Formula sheet</b><button class="sm" id="fx">Close</button></div>${typeof katex==='undefined'?'<p class="err">The math notation library could not be loaded (check your internet connection); formulas are shown as LaTeX source.</p>':''}${FORMULAS.map((s,i)=>`<details ${i==0?'open':''}><summary>${s[0]}</summary>${s[1].map(r=>`<div class="frow"><div class="fname">${r[0]}</div><div class="fform">${r[1]}</div></div>`).join('')}</details>`).join('')}</div>`;document.body.appendChild(d);document.getElementById('fx').onclick=()=>d.remove();d.onclick=e=>{if(e.target===d)d.remove()}}
 function home(){ST={};app.innerHTML=`<div class="hero"><h1>Statistics Quiz Bank</h1><p>Pick a topic — 20 questions each.</p></div>${SCRIPT_URL?'':'<p class="err"><b>SCRIPT_URL is empty: set it to your Apps Script web app URL.</b></p>'}<div class="grid">${TOPICS.map((t,i)=>`<button class="topic" style="--h:${HUE[i]}" data-i="${i}">${nm(t)}</button>`).join('')}</div><p><button class="link" id="ins">Instructor view</button> &nbsp;·&nbsp; <button class="link" onclick="openFormulas()">📐 Formula sheet</button></p>`;
 app.querySelectorAll('.topic').forEach(b=>b.onclick=()=>login(+b.dataset.i));$('#ins').onclick=instrLogin}
 function login(i){const t=TOPICS[i];app.innerHTML=`<div class="hero sm"><h1>${nm(t)}</h1></div><div class="card"><label>Your unique username</label><input type="text" id="u" autocomplete="off"><label>Quiz password</label><input type="password" id="p"><p id="msg" class="mu"></p><button id="go">Start quiz</button> <button class="link" id="bk">Back</button></div>`;
@@ -196,10 +216,11 @@ if(!r.ok){app.innerHTML=`<p class="err">Could not load data.</p><button id="bk">
 const L=new Map();r.rows.forEach(x=>L.set(x[1]+'|'+x[3],x)); // latest answer per student & question
 const byQ={},byU={};L.forEach(x=>{(byQ[x[3]]=byQ[x[3]]||[]).push(x);byU[x[1]]=(byU[x[1]]||0)+(+x[5]?1:0)});
 const qs=r.qs;
-app.innerHTML=`<p><button class="link" id="bk">← Topics</button></p><div class="hero sm"><h1>${nm(t)}</h1></div><button id="ta">Topic average</button><div id="tav"></div><div class="wrap"><table><tr><th>#</th><th>Question</th><th></th></tr>${qs.map((q,k)=>`<tr><td>${k+1}</td><td>${sb(q.q.slice(0,120))}${q.q.length>120?'…':''}</td><td><button class="sm" data-q="${k+1}">Summary</button></td></tr><tr id="d${k+1}" hidden><td></td><td colspan="2"></td></tr>`).join('')}</table></div>`;
+app.innerHTML=`<p><button class="link" id="bk">← Topics</button></p><div class="hero sm"><h1>${nm(t)}</h1></div><button id="ta">Topic average</button><div id="tav"></div><div class="wrap"><table><tr><th>#</th><th>Question</th><th></th></tr>${qs.map((q,k)=>`<tr><td>${k+1}</td><td>${sb(cutq(q.q))}</td><td><button class="sm" data-q="${k+1}">Summary</button></td></tr><tr id="d${k+1}" hidden><td></td><td colspan="2"></td></tr>`).join('')}</table></div>`;
 $('#bk').onclick=instrHome;
 $('#ta').onclick=()=>{const v=Object.values(byU),n=v.length;$('#tav').innerHTML=n?`<div class="card"><b>Average score: ${f(v.reduce((a,b)=>a+b)/n,2)} / 20 (${f(v.reduce((a,b)=>a+b)/n*5,1)}%)</b><br>${n} student(s) · lowest ${Math.min(...v)} · highest ${Math.max(...v)}<br><span class="mu">Latest answer per question; unanswered questions count as incorrect.</span></div><div class="card"><b>Class score distribution</b><div class="wrap">${hist(v)}</div></div>`:'<div class="card">No submissions yet.</div>'};
 app.querySelectorAll('button[data-q]').forEach(b=>b.onclick=()=>{const k=+b.dataset.q,row=$('#d'+k),rs=byQ[k]||[],n=rs.length,cnt=[0,0,0,0];rs.forEach(x=>cnt[LET.indexOf(x[4])]++);row.hidden=!row.hidden;
 row.children[1].innerHTML=n?`<b>${n} response(s) · ${f(rs.filter(x=>+x[5]).length/n*100,0)}% correct</b>`+cnt.map((c,j)=>`<div>${LET[j]}. ${sb(qs[k-1].opts[j])}${j==qs[k-1].ans?' ✓':''}<br><span class="b ${j==qs[k-1].ans?'c':''}" style="width:${c/n*60}%"></span> ${c} (${f(c/n*100,0)}%)</div>`).join(''):'No responses yet.'});}
+MO.observe(document.body,{childList:true,subtree:true});
 home();
 </script></body></html>
