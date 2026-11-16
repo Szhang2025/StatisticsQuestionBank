@@ -60,7 +60,7 @@ th{background:color-mix(in srgb,var(--ac) 12%,var(--card));color:var(--ac)}
 /* Paste your deployed Apps Script Web App URL here (see Code.gs). */
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwT23TWc7m_g_e1GIl66fYOJ9OXcjvlz6xO8VYbjrRayfFKbV_SY6mQf4pYrcDd7nWTrg/exec';
 const HUE=Array.from({length:60},(_,i)=>(215+i*47)%360),LET='ABCD',f=(x,d=2)=>(+x).toFixed(d);
-const TOPICS=[{id:'prob',name:'Probability: counting, conditional probability and Bayes'},{id:'rv',name:'Random variables, distributions and correlation'},{id:'desc',name:'Descriptive statistics and sampling distributions'},{id:'z1p',name:'One-sample z test for a proportion'},{id:'z1ci',name:'One-sample z confidence interval for a proportion'},{id:'t1s',name:'One-sample t test'},{id:'t1ci',name:'One-sample t confidence interval'},{id:'t2s',name:'Two-sample t test (Welch)'},{id:'t2ci',name:'Two-sample t confidence interval (Welch)'},{id:'gof',name:'Chi-square test for goodness of fit'},{id:'ind',name:'Chi-square test for independence'},{id:'hom',name:'Chi-square test for homogeneity'},{id:'anova',name:'One-way ANOVA with Tukey follow-up'},{id:'slr',name:'Simple linear regression'},{id:'mlr',name:'Multiple linear regression'},{id:'logit',name:'Logistic regression: odds ratios (adjusted & unadjusted)'},{id:'cc',name:'Control charts (x̄, R, p)'},{id:'pow',name:'Type I/II errors, α, β and power'},{id:'ab',name:'A/B testing and sample size'},{id:'dm1',name:'Data mining: model evaluation'},{id:'dm2',name:'Data mining: entropy, impurity and distance'},{id:'rcode',name:'Basic R coding'},{id:'ethics',name:'Data ethics'},{id:'nonpar',name:'Nonparametric statistics'},{id:'ts',name:'Time series and forecasting'},{id:'causal',name:'Introduction to causal inference'},{id:'cnn',name:'Convolutional neural networks (1 and 3 channels)'}];
+const TOPICS=[{id:'prob',name:'Probability: counting, conditional probability and Bayes'},{id:'rv',name:'Random variables, distributions and correlation'},{id:'desc',name:'Descriptive statistics and sampling distributions'},{id:'z1p',name:'One-sample z test for a proportion'},{id:'z1ci',name:'One-sample z confidence interval for a proportion'},{id:'t1s',name:'One-sample t test'},{id:'t1ci',name:'One-sample t confidence interval'},{id:'t2s',name:'Two-sample t test (Welch)'},{id:'t2ci',name:'Two-sample t confidence interval (Welch)'},{id:'gof',name:'Chi-square test for goodness of fit'},{id:'ind',name:'Chi-square test for independence'},{id:'hom',name:'Chi-square test for homogeneity'},{id:'anova',name:'One-way ANOVA with Tukey follow-up'},{id:'slr',name:'Simple linear regression'},{id:'mlr',name:'Multiple linear regression'},{id:'logit',name:'Logistic regression: odds ratios (adjusted & unadjusted)'},{id:'cc',name:'Control charts (x̄, R, p)'},{id:'pow',name:'Type I/II errors, α, β and power'},{id:'ab',name:'A/B testing and sample size'},{id:'dm1',name:'Data mining: model evaluation'},{id:'dm2',name:'Data mining: entropy, impurity and distance'},{id:'rcode',name:'Basic R coding'},{id:'ethics',name:'Data ethics'},{id:'nonpar',name:'Nonparametric statistics'},{id:'ts',name:'Time series and forecasting'},{id:'causal',name:'Introduction to causal inference'},{id:'cnn',name:'Convolutional neural networks (1 and 3 channels)'},{id:'rnn',name:'Recurrent neural networks (RNN, LSTM, GRU)'}];
 /* ---------- app ---------- */
 /* ---- distribution tables shown next to p-value questions (computed here) ---- */
 const lnG=z=>{const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=z,t=z+5.5;t-=(z+.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/z)};
@@ -258,6 +258,19 @@ const FORMULAS=[
 ['Flattened size',M(L`H\times W\times C`)],
 ['Parameters of a fully connected layer',M(L`(n_{in}+1)\times n_{out}`)],
 ['Softmax',M(L`\text{softmax}(z_k)=\frac{e^{z_k}}{\sum_j e^{z_j}}`)]]],
+['Recurrent neural networks',[
+['Hidden state update (simple RNN)',M(L`h_t=\tanh(W_x x_t+W_h h_{t-1}+b)`)],
+['Output at time t',M(L`y_t=W_y h_t+c`)],
+['Sigmoid function',M(L`\sigma(z)=\frac{1}{1+e^{-z}}`)],
+['Parameters of a simple RNN layer',M(L`(n_{in}+n_h+1)\,n_h`)],
+['LSTM forget gate',M(L`f_t=\sigma(W_f x_t+U_f h_{t-1}+b_f)`)],
+['LSTM input gate',M(L`i_t=\sigma(W_i x_t+U_i h_{t-1}+b_i)`)],
+['LSTM output gate',M(L`o_t=\sigma(W_o x_t+U_o h_{t-1}+b_o)`)],
+['LSTM candidate cell state',M(L`\tilde{c}_t=\tanh(W_c x_t+U_c h_{t-1}+b_c)`)],
+['LSTM cell state',M(L`c_t=f_t\odot c_{t-1}+i_t\odot\tilde{c}_t`)],
+['LSTM hidden state',M(L`h_t=o_t\odot\tanh(c_t)`)],
+['Parameters of an LSTM layer',M(L`4\,(n_{in}+n_h+1)\,n_h`)],
+['GRU gates','a reset gate and an update gate (no separate cell state)']]],
 ['Control charts',[
 ['x̄ chart: center line',M(L`CL=\bar{\bar{x}}`)],
 ['x̄ chart: control limits',M(L`UCL,\ LCL=\bar{\bar{x}}\pm A_2\bar{R}`)],
