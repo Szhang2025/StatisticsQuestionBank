@@ -95,7 +95,7 @@ t=t.replace(/(?<![A-Za-z])(np|p|n|s|x|q|μ|σ)([012])(?![0-9A-Za-z])/g,(m,a,i)=>
 t=t.replace(/([χσ])²/g,(m,a)=>MK(`${GK[a]}^2`));
 t=t.replace(/(?<![A-Za-z])([sRr])²/g,(m,a)=>MK(`${a}^2`));
 return t.replace(/[αβλμσχπ]/g,m=>MK(GK[m]))}
-const LB=e=>e.replace(/\. (Kernel|Patch|Filter|Input:)/g,'.<br>$1').replace(/ \| Row /g,'<br>Row ').replace(/ Counts — Row /g,'<br>Row ').replace(/\. (Sample 2:)/g,'.<br>$1').replace(/; (actual negative)/g,';<br>$1').replace(/\. (Record B:)/g,'.<br>$1').replace(/; (H0:)/g,';<br>$1').replace(/\. (Unexposed group:)/g,'.<br>$1').replace(/ (Unadjusted \(crude\) analysis\.)/g,'$1<br>').replace(/\. (Use the Welch)/g,'.<br>$1');
+const LB=e=>e.replace(/\. (Kernel|Patch|Filter|Input:|Unit 1:)/g,'.<br>$1').replace(/; (Unit \d:)/g,';<br>$1').replace(/ \| Row /g,'<br>Row ').replace(/ Counts — Row /g,'<br>Row ').replace(/\. (Sample 2:)/g,'.<br>$1').replace(/; (actual negative)/g,';<br>$1').replace(/\. (Record B:)/g,'.<br>$1').replace(/; (H0:)/g,';<br>$1').replace(/\. (Unexposed group:)/g,'.<br>$1').replace(/ (Unadjusted \(crude\) analysis\.)/g,'$1<br>').replace(/\. (Use the Welch)/g,'.<br>$1');
 const sb=t=>{const e=LB(esc(t));if(typeof katex==='undefined')return SUB(e.replace(/\\\((.*?)\\\)/g,'$1'));return e.split(/(\\\(.*?\\\))/g).map((p,i)=>i%2?p:MATH(p)).join('')};
 const cutq=q=>q.length>120&&!q.includes('\\(')?q.slice(0,120)+'…':q;
 const RM=()=>{if(typeof renderMathInElement==='function')renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false,ignoredTags:['script','noscript','style','textarea','code']})};
@@ -246,6 +246,11 @@ const FORMULAS=[
 ['Average treatment effect',M(L`ATE=E\left[Y(1)-Y(0)\right]`)],
 ['Estimate in a randomized experiment',M(L`\widehat{ATE}=\bar{y}_{\text{treated}}-\bar{y}_{\text{control}}`)],
 ['Propensity score',M(L`e(x)=P(T=1\mid X=x)`)],
+['Propensity score from a logistic model',M(L`e(x)=\frac{1}{1+e^{-(b_0+b_1x)}}`)],
+['Inverse probability weight',M(L`w_i=\frac{T_i}{e(x_i)}+\frac{1-T_i}{1-e(x_i)}`)],
+['Weighted regression with propensity weights','regress the outcome y on the treatment indicator T using the weights w; the coefficient of T estimates the average treatment effect'],
+['Weighted difference in means (what the coefficient of T equals)',M(L`\hat{\tau}_{IPW}=\frac{\sum w_iT_iy_i}{\sum w_iT_i}-\frac{\sum w_i(1-T_i)y_i}{\sum w_i(1-T_i)}`)],
+['Standardized mean difference (covariate balance)',M(L`SMD=\frac{\bar{x}_T-\bar{x}_C}{\sqrt{(s_T^2+s_C^2)/2}}`)],
 ['Difference-in-differences',M(L`DiD=(\bar{y}^{\,after}_{treated}-\bar{y}^{\,before}_{treated})-(\bar{y}^{\,after}_{control}-\bar{y}^{\,before}_{control})`)]]],
 ['Convolutional neural networks',[
 ['Output size of a convolution (input W, kernel F, padding P, stride S)',M(L`\left\lfloor\frac{W-F+2P}{S}\right\rfloor+1`)],
